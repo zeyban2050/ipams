@@ -1,0 +1,11 @@
+**accounts difference
+*Unregistered Guest
+-can only view the titles of the records
+*Registered Guest
+-can view the abstract of the records, and has profile
+*Student
+-can add a record
+*Adviser
+-can upload records via spreadsheet, view pending, approved, and disapproved records. can upgrade guest to student accounts or student to guest accounts, can remove accounts
+*KTTO/RDCO
+-can upgrade up to RDCO accounts, can remove records

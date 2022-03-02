@@ -1,0 +1,37 @@
+{% extends 'ipams/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block head %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/notifications.css' %}"/>
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="row">
+            <div id="notification-header" class="col-12 d-flex justify-content-center" style="margin-top:50px">
+                <ul>
+                    <li><a href="#">Compose</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="notifications-con">
+                    <div id="notification-subjects">
+                        <ul>
+                        {% for notification in received_notifications %}
+                            <li><a href="#">{{ notification.subject }}</a></li>
+                        {% endfor %}
+                        </ul>
+                    </div>
+                    <div id="notification-body">
+                    {% for notification in received_notifications %}
+                        {{ notification.body|safe }}<br>
+                    {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

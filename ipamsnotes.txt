@@ -1,0 +1,53 @@
+************
+register student (adviser ang mo managed) - to be approved by adviser (to be discussed)
+
+OR
+
+adviser will create an account sa team
+
+add another user student/team (to be proposed to RDCO)
+
+add option nga ma edit/update ang details (original uploader or adviser)
+
+add - upload content (to be determined)
+
+e detail ang pag upload sa file
+
+sample: SRS - upload file
+	SPMP - upload file
+
+ 	3 access types
+guest - view title andd description
+registered normal - view abstract
+registered gyud - maka view or download sa specific abstract
+
+define access (benchmark ani)
+	- download or re download anytime
+	- timeframe kung when ma download
+	- ka 1 ra dapat ma download
+
+for approval: add additional info (ipa consult pa sa RDCO)
+
+REMINDER:
+1. di pwede e repeat ang same title bisag lahi ang content
+
+NEXT STEP:
+1. draft proposal about specs and functions
+2. discussed sa rdco and ktto para ma finalize ang scope
+************
+
+guest, registered, researcher
+
+questions:
+are the stored records allows records in progress?
+
+can adviser remove the uploaded file? and will she be able to upload herself?
+if a student registration needs to be approved by the adviser, how to register as an adviser?
+author(student) needs an account before they can be inputted as an author to a record
+-suggestion is it ok if it is designed as input tags
+collaborator filter refering to industry or institution?
+graphs - how many columns?
+- are the psced classifications fixed? or should it be dynamic
+
+proposals:
+for authors, 
