@@ -29,7 +29,6 @@ from accounts.forms import LoginForm
 
 FILE_LENGTH = 5242880
 
-
 def update_record_tags(request, record_id):
     record = Record.objects.get(pk=record_id)
     ip_is_changed = False
@@ -77,6 +76,9 @@ def update_record_tags(request, record_id):
         Log(user=request.user, action=f'community_extension_tag status changed to \"{status}\", record ID: <a href="/dashboard/logs/record/{record_id}">#{record_id}</a>').save()
     return {'success': True, 'is-ip': record.is_ip, 'for-commercialization': record.for_commercialization, 'community-ext': record.community_extension}
 
+#custom function to check the request type since Httpis_ajax(request=request) method is deprecated.
+def is_ajax(request):
+    return request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
 
 class Home(View):
     name = 'records/index.html'
@@ -103,7 +105,7 @@ class Home(View):
         return render(request, self.name, context)
 
     def post(self, request):
-        if request.is_ajax():
+        if is_ajax(request=request):
             data = []
             checked_records = CheckedRecord.objects.filter(status='approved', checked_by__in=Subquery(User.objects.filter(role=5).values('pk')))
             records = Record.objects.filter(pk__in=Subquery(checked_records.values('record_id')))
@@ -201,7 +203,7 @@ class ViewManageDocuments(View):
         return render(request, self.name, self.context)
 
     def post(self, request):
-        if request.is_ajax():
+        if is_ajax(request=request):
             if request.POST.get('status_change', False) == 'true':
                 record_upload = RecordUpload.objects.get(pk=int(request.POST.get('record_upload_id', 0)))
                 record_upload.record_upload_status = RecordUploadStatus.objects.get(pk=request.POST.get('status', 0))
@@ -280,7 +282,7 @@ class ViewManageDocumentsRecord(View):
         return render(request, self.name, self.context)
 
     def post(self, request, record_id):
-        if request.is_ajax():
+        if is_ajax(request=request):
             # removing record
             if request.POST.get('remove', 'false') == 'true':
                 del_record = Record.objects.get(pk=record_id)
@@ -382,7 +384,7 @@ class ViewRecord(View):
         return render(request, self.name, self.context)
 
     def post(self, request, record_id):
-        if request.is_ajax():
+        if is_ajax(request=request):
             # updating record tags
             if request.POST.get('tags_update', 'false') == 'true':
                 return JsonResponse(update_record_tags(request, record_id))
@@ -484,7 +486,7 @@ class PendingRecordView(View):
         return render(request, self.name, self.context)
 
     def post(self, request, record_id):
-        if request.is_ajax():
+        if is_ajax(request=request):
             # removing record
             if request.POST.get('remove', 'false') == 'true':
                 del_record = Record.objects.get(pk=record_id)
@@ -609,7 +611,7 @@ class MyRecordView(View):
         return render(request, self.name, self.context)
 
     def post(self, request, record_id):
-        if request.is_ajax():
+        if is_ajax(request=request):
             # removing record
             if request.POST.get('remove', 'false') == 'true':
                 del_record = Record.objects.get(pk=record_id)
@@ -736,7 +738,7 @@ class ApprovedRecordView(View):
         return render(request, self.name, self.context)
 
     def post(self, request, record_id):
-        if request.is_ajax():
+        if is_ajax(request=request):
             # removing record
             if request.POST.get('remove', 'false') == 'true':
                 del_record = Record.objects.get(pk=record_id)
@@ -853,7 +855,7 @@ class DeclinedRecordView(View):
         return render(request, self.name, self.context)
 
     def post(self, request, record_id):
-        if request.is_ajax():
+        if is_ajax(request=request):
             # removing record
             if request.POST.get('remove', 'false') == 'true':
                 del_record = Record.objects.get(pk=record_id)
@@ -941,7 +943,7 @@ class Add(View):
     def post(self, request):
         error_messages = []
         record_form = forms.RecordForm(request.POST, request.FILES)
-        if request.is_ajax():
+        if is_ajax(request=request):
             if request.POST.get("get_user_tags", 'false') == 'true':
                 users = []
                 advisers = []
@@ -1082,7 +1084,7 @@ class AddResearch(View):
         error_messages = []
         record_form = forms.RecordForm(request.POST, request.FILES)
         proposal_record = ResearchRecord.objects.get(pk=research_record_id).proposal
-        if request.is_ajax():
+        if is_ajax(request=request):
             if request.POST.get("get_user_tags", 'false') == 'true':
                 users = []
                 advisers = []
@@ -1218,7 +1220,7 @@ class Edit(View):
         error_messages = []
         record_instance = Record.objects.get(pk=record_id)
         record_form = forms.RecordForm(request.POST, request.FILES, instance=Record.objects.get(pk=record_id))
-        if request.is_ajax():
+        if is_ajax(request=request):
             if request.POST.get("get_user_tags", 'false') == 'true':
                 users = []
                 for user in User.objects.all():
@@ -1594,7 +1596,7 @@ class Dashboard(View):
         return render(request, self.name)
 
     def post(self, request):
-        if request.is_ajax():
+        if is_ajax(request=request):
             checked_records = CheckedRecord.objects.filter(status='approved', checked_by__in=Subquery(User.objects.filter(role=5).values('pk')))
             records = Record.objects.filter(pk__in=Subquery(checked_records.values('record_id')))
             # graphs
@@ -1674,7 +1676,7 @@ class LogsView(View):
         return render(request, self.name)
 
     def post(self, request):
-        if request.is_ajax():
+        if is_ajax(request=request):
             data = []
             logs = Log.objects.all()
             for log in logs:
@@ -1737,7 +1739,7 @@ class DashboardLogsRecordView(View):
         return render(request, self.name, self.context)
 
     def post(self, request, record_id):
-        if request.is_ajax():
+        if is_ajax(request=request):
             # removing record
             if request.POST.get('remove', 'false') == 'true':
                 del_record = Record.objects.get(pk=record_id)
@@ -1810,7 +1812,7 @@ class ViewManageRecords(View):
         return render(request, self.name)
 
     def post(self, request):
-        if request.is_ajax():
+        if is_ajax(request=request):
             records = Record.objects.all()
             data = []
 
@@ -1935,7 +1937,7 @@ class DashboardManageRecord(View):
         return render(request, self.name, self.context)
 
     def post(self, request, record_id):
-        if request.is_ajax():
+        if is_ajax(request=request):
             # removing record
             if request.POST.get('remove', 'false') == 'true':
                 del_record = Record.objects.get(pk=record_id)
@@ -2011,7 +2013,7 @@ class DashboardManageAccounts(View):
         return render(request, self.name, context)
 
     def post(self, request):
-        if request.is_ajax():
+        if is_ajax(request=request):
             # removing accounts
             if request.POST.get('remove-accounts'):
                 accounts = request.POST.getlist('accounts[]')

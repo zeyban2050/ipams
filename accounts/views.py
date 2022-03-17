@@ -18,7 +18,10 @@ from .models import User, UserRole, RoleRequest, Course, Student, Log, Setting
 from django.db.models import Q
 from django.contrib.auth.hashers import check_password
 
-
+#custom function to check the request type since Httpis_ajax(request=request) method is deprecated.
+def is_ajax(request):
+    return request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
+    
 class RegisterView(View):
     name = 'accounts/register.html'
 
@@ -56,7 +59,10 @@ class SignupView(View):
         return render(request, self.name, {'form': form, 'hide_profile': True})
 
     def post(self, request):
-        if request.is_ajax():
+        # The Httpis_ajax(request=request) method is deprecated.
+        # Depending on your use case, you can either write your own AJAX detection method, 
+        # or use the new HttpRequest.accepts() method if your code depends on the client Accept HTTP header.
+        if is_ajax(request=request):
             if request.POST.get("get_courses", 'false') == 'true':
                 courses = []
                 for course in Course.objects.all():

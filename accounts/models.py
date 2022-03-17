@@ -39,7 +39,7 @@ class UserRole(models.Model):
 class User(AbstractBaseUser, PermissionsMixin):
 	username = models.CharField(max_length=30, unique=True)
 	first_name = models.CharField(max_length=50)
-	middle_name = models.CharField(max_length=50)
+	middle_name = models.CharField(max_length=50, default='', blank=True)
 	last_name = models.CharField(max_length=50)
 	email = models.CharField(max_length=30, unique=True)
 	contact_no = models.CharField(max_length=20, blank=True)
