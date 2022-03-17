@@ -73,7 +73,7 @@ class Record(models.Model):
     abstract = RichTextField(blank=True, null=True)
     classification = models.ForeignKey(Classification, on_delete=models.DO_NOTHING)
     psced_classification = models.ForeignKey(PSCEDClassification, on_delete=models.DO_NOTHING)
-    abstract_file = models.FileField(upload_to='abstract/')
+    abstract_file = models.FileField(upload_to='abstract/', default='')
     is_ip = models.BooleanField(default=False)
     for_commercialization = models.BooleanField(default=False)
     community_extension = models.BooleanField(default=False)
