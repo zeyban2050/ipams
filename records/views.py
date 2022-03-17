@@ -963,7 +963,7 @@ class Add(View):
         result = r.json()
         ''' End reCAPTCHA validation '''
 
-        if record_form.is_valid() and not request.is_ajax() and (result['success'] or settings.TEST_FORM):
+        if record_form.is_valid() and not is_ajax(request=request) and (result['success'] or settings.TEST_FORM):
             record = record_form.save(commit=False)
             file_is_valid = True
             file = record_form.cleaned_data.get('abstract_file', False)
