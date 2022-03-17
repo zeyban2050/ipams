@@ -1,6 +1,6 @@
 from django.db import models
 from ckeditor.fields import RichTextField
-
+from datetime import date
 
 class Classification(models.Model):
     name = models.CharField(max_length=100)
@@ -59,7 +59,7 @@ class CollaborationType(models.Model):
         return self.name
 
 
-class RecordType(models.Model):
+class RecordType(models.Model): 
     name = models.CharField(max_length=100)
     date_created = models.DateTimeField(auto_now_add=True)
 
@@ -120,7 +120,7 @@ class Author(models.Model):
 
 class Conference(models.Model):
     title = models.CharField(max_length=100)
-    date = models.DateField()
+    date = models.DateField(default=date.today)
     venue = models.CharField(max_length=100)
     conference_level = models.ForeignKey(ConferenceLevel, on_delete=models.DO_NOTHING)
     record = models.ForeignKey(Record, on_delete=models.CASCADE)

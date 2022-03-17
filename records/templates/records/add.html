@@ -100,12 +100,18 @@
 
 		$("#add-conference-btn").on("click",function(){
 			conferenceCount++;
-			$("#conference-rows").append('<div class="row" id="conference-'+conferenceCount+'"><div class="col-2"><select name="conference_levels[]" class="form-control"> {% for conference_level in conference_levels %} <option value="{{ conference_level.pk }}">{{ conference_level.name }}</option> {% endfor %} </select></div><div class="col-3"><input type="text" placeholder="Title" name="conference_titles[]" class="form-control"></div><div class="col-2"><input type="date" name="conference_dates[]" class="form-control"></div><div class="col-3"><input type="text" placeholder="Venue" name="conference_venues[]" class="form-control"></div><div class="col-2"><button class="btn btn-danger" type="button" onclick="removeConference('+conferenceCount+')">REMOVE</button></div></div>');
+			$("#conference-rows").append('<div class="row" id="conference-'+conferenceCount+'"><div class="col-2"><select name="conference_levels[]" class="form-control"> {% for conference_level in conference_levels %} <option value="{{ conference_level.pk }}">{{ conference_level.name }}</option> {% endfor %} </select></div><div class="col-3"><input type="text" placeholder="Title" name="conference_titles[]" class="form-control"></div><div class="col-2"><input type="date" id="addDate" name="conference_dates[]" class="form-control" style="width: 160px;"></div><div class="col-3"><input type="text" placeholder="Venue" name="conference_venues[]" class="form-control"></div><div class="col-2"><button class="btn btn-danger" type="button" onclick="removeConference('+conferenceCount+')">REMOVE</button></div></div>');
+
+			var now = new Date();
+			var day = ("0" + now.getDate()).slice(-2);
+			var month = ("0" + (now.getMonth() + 1)).slice(-2);
+			var today = now.getFullYear()+"-"+(month)+"-"+(day);
+			$('#addDate').val(today);
 		});
 
 		$("#add-budget-btn").on("click",function(){
 			budgetCount++;
-			$("#budget-rows").append('<div class="row" id="budget-'+budgetCount+'"><div class="col-2"><select name="budget_types[]" class="form-control"> {% for budget_type in budget_types %} <option value="{{ budget_type.pk }}">{{ budget_type.name }}</option> {% endfor %} </select></div><div class="col-4"><input type="number" name="budget_allocations[]" placeholder="Budget Allocation" class="form-control"></div><div class="col-4"><input type="text" name="funding_sources[]" placeholder="Funding Source" class="form-control"></div><div class="col-2"><button class="btn btn-danger" type="button" onclick="removeBudget('+budgetCount+')">REMOVE</button></div></div>');
+			$("#budget-rows").append('<div class="row" id="budget-'+budgetCount+'"><div class="col-2"><select name="budget_types[]" class="form-control"> {% for budget_type in budget_types %} <option value="{{ budget_type.pk }}">{{ budget_type.name }}</option> {% endfor %} </select></div><div class="col-4"><input type="number" name="budget_allocations[]" value="0" class="form-control"></div><div class="col-4"><input type="text" name="funding_sources[]" placeholder="Funding Source" class="form-control"></div><div class="col-2"><button class="btn btn-danger" type="button" onclick="removeBudget('+budgetCount+')">REMOVE</button></div></div>');
 		});
 
 		$("#add-collaboration-btn").on("click",function(){

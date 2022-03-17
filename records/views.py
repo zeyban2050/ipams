@@ -1039,13 +1039,17 @@ class Add(View):
                 messages.error(request, 'A record with the same record information already exists')
         else:
             messages.error(request, 'You must fill-in all the required fields')
+
+
         context = {
             'author_roles': self.author_roles,
             'conference_levels': self.conference_levels,
             'budget_types': self.budget_types,
             'collaboration_types': self.collaboration_types,
+            'record_types': self.record_types,
             'record_form': record_form,
             'publication_form': self.publication_form,
+            'uploads': self.uploads,
             'error_messages': error_messages,
         }
         return render(request, self.name, context)
