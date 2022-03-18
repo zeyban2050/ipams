@@ -1,6 +1,5 @@
 from django.db import models
 from ckeditor.fields import RichTextField
-from datetime import date
 
 class Classification(models.Model):
     name = models.CharField(max_length=100)
@@ -8,7 +7,6 @@ class Classification(models.Model):
 
     def __str__(self):
         return self.name
-
 
 class PSCEDClassification(models.Model):
     id = models.IntegerField(primary_key=True)
@@ -120,7 +118,7 @@ class Author(models.Model):
 
 class Conference(models.Model):
     title = models.CharField(max_length=100)
-    date = models.DateField(default=date.today)
+    date = models.DateField()
     venue = models.CharField(max_length=100)
     conference_level = models.ForeignKey(ConferenceLevel, on_delete=models.DO_NOTHING)
     record = models.ForeignKey(Record, on_delete=models.CASCADE)

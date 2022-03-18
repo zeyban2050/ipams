@@ -975,6 +975,7 @@ class Add(View):
                 owners = json.loads(request.POST.get('owners-id'))
                 adviser = json.loads(request.POST.get('adviser-id'))
                 record.adviser = User.objects.get(pk=adviser[0]['id'])
+
             # Saving record code only if the role is student
                 if request.user.role.pk == 2:
                     student = Student.objects.get(user=request.user)
