@@ -14,3 +14,6 @@ channels
 channels-redis
 django-extensions
 graphviz
+django-axes
+django-auto-logout
+six

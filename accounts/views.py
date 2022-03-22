@@ -2,7 +2,7 @@ import json
 import requests
 
 from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout as auth_logout
+from django.contrib.auth import signals, authenticate, login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.db import connection
 from django.http import JsonResponse, HttpResponseRedirect
@@ -18,10 +18,22 @@ from .models import User, UserRole, RoleRequest, Course, Student, Log, Setting
 from django.db.models import Q
 from django.contrib.auth.hashers import check_password
 
-#custom function to check the request type since Httpis_ajax(request=request) method is deprecated.
-def is_ajax(request):
-    return request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
-    
+from django.views.decorators.csrf import csrf_exempt
+from axes.decorators import axes_dispatch
+
+# from django.contrib.auth import get_user_model
+# from django.contrib.auth.models import User
+# from django.contrib.auth.tokens import default_token_generator
+# from django.contrib.sites.shortcuts import get_current_site
+# from django.core.mail import EmailMessage
+# from django.http import HttpResponse
+# from django.template.loader import render_to_string
+# from django.utils.encoding import force_bytes
+# from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+
+# UserModel = get_user_model()
+# from .tokens import activation_token
+
 class RegisterView(View):
     name = 'accounts/register.html'
 
@@ -59,10 +71,7 @@ class SignupView(View):
         return render(request, self.name, {'form': form, 'hide_profile': True})
 
     def post(self, request):
-        # The Httpis_ajax(request=request) method is deprecated.
-        # Depending on your use case, you can either write your own AJAX detection method, 
-        # or use the new HttpRequest.accepts() method if your code depends on the client Accept HTTP header.
-        if is_ajax(request=request):
+        if request.is_ajax():
             if request.POST.get("get_courses", 'false') == 'true':
                 courses = []
                 for course in Course.objects.all():
@@ -75,6 +84,10 @@ class SignupView(View):
             if form.is_valid():
                 user = form.save(commit=False)
                 password = form.cleaned_password()
+
+                # modification
+                
+
                 if password:
                     user.set_password(password)
                     user.role = UserRole.objects.get(pk=1)
@@ -98,35 +111,98 @@ class SignupView(View):
             form = forms.RegistrationForm(request.POST)
             return render(request, self.name, {'form': form, 'hide_profile': True})
 
+# def login_user(request):
+#     if request.method == 'POST':
+#         ''' reCAPTCHA validation '''
+#         recaptcha_response = request.POST.get('g-recaptcha-response')
+#         data = {
+#             'secret': settings.GOOGLE_RECAPTCHA_SECRET_KEY,
+#             'response': recaptcha_response
+#         }
+#         r = requests.post('https://www.google.com/recaptcha/api/siteverify', data=data)
+#         result = r.json()
+#         ''' End reCAPTCHA validation '''
 
-def login_user(request):
-    if request.method == 'POST':
-        ''' reCAPTCHA validation '''
-        recaptcha_response = request.POST.get('g-recaptcha-response')
-        data = {
-            'secret': settings.GOOGLE_RECAPTCHA_SECRET_KEY,
-            'response': recaptcha_response
-        }
-        r = requests.post('https://www.google.com/recaptcha/api/siteverify', data=data)
-        result = r.json()
-        ''' End reCAPTCHA validation '''
+#         if result['success'] or settings.TEST_FORM:
+#             form = forms.LoginForm(request.POST)
+#             if form.is_valid():
+#                 username = form.cleaned_data.get('username')
+#                 password = form.cleaned_data.get('password')
+#                 user = authenticate(username=username, password=password)
+#                 if user:
+#                     login(request, user)
+#                     messages.success(request, f'Welcome {username}')
+#                     if request.POST.get('next'):
+#                         return redirect(request.POST.get('next'))
+#                 else:
+#                     messages.error(request, 'Invalid Username/Password')
+#         else:
+#             messages.error(request, 'Recaptcha is required')
+#     return redirect('records-index')
 
-        if result['success'] or settings.TEST_FORM:
-            form = forms.LoginForm(request.POST)
-            if form.is_valid():
-                username = form.cleaned_data.get('username')
-                password = form.cleaned_data.get('password')
-                user = authenticate(username=username, password=password)
-                if user:
-                    login(request, user)
-                    messages.success(request, f'Welcome {username}')
-                    if request.POST.get('next'):
-                        return redirect(request.POST.get('next'))
+@method_decorator(axes_dispatch, name='dispatch')
+@method_decorator(csrf_exempt, name='dispatch')
+class LoginView(View):
+    name = 'ipams/base.html'
+
+    def get(self, request):
+        return render(request, self.name)
+
+    def post(self, request):
+        if request.method == 'POST':
+            ''' reCAPTCHA validation '''
+            recaptcha_response = request.POST.get('g-recaptcha-response')
+            data = {
+                'secret': settings.GOOGLE_RECAPTCHA_SECRET_KEY,
+                'response': recaptcha_response
+            }
+            r = requests.post('https://www.google.com/recaptcha/api/siteverify', data=data)
+            result = r.json()
+            ''' End reCAPTCHA validation '''
+
+            if result['success'] or settings.TEST_FORM:
+                form = forms.LoginForm(request.POST)
+                if form.is_valid():
+                    username = form.cleaned_data.get('username')
+                    user = authenticate(
+                        request=request,
+                        username=form.cleaned_data.get('username'),
+                        password=form.cleaned_data.get('password'),
+                    )
+                    if user:
+                        login(request, user)
+                        # signals.user_logged_in.send(
+                        #     sender=User,
+                        #     request=request,
+                        #     user=user,
+                        # )
+                        print('if user')
+                        messages.success(request, f'Welcome {username}')
+                        if request.POST.get('next'):
+                            return redirect(request.POST.get('next'))
+                    else:
+                        # inform django-axes of failed login
+                        signals.user_login_failed.send(
+                            sender=User,
+                            request=request,
+                            credentials={
+                                'username': form.cleaned_data.get('username'),
+                            },
+                        )
+                        print('if user else')
+                        messages.error(request, 'Invalid Username/Password')
                 else:
-                    messages.error(request, 'Invalid Username/Password')
-        else:
-            messages.error(request, 'Recaptcha is required')
-    return redirect('records-index')
+                    # signals.user_login_failed.send(
+                    #     sender=User,
+                    #     request=request,
+                    #     credentials={
+                    #         'username': form.cleaned_data.get('username'),
+                    #     },
+                    # )
+                    messages.error(request, 'Invalid Form')  
+            else:
+                messages.error(request, 'Recaptcha is required')
+        return redirect('records-index')
 
 
 def logout(request):

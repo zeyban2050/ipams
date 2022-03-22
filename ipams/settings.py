@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 # import django_heroku
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -34,6 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'ckeditor',
     'django_extensions',
+    'axes',
     # 'channels',
 ]
 
@@ -45,6 +47,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'axes.middleware.AxesMiddleware',
+    # 'django_auto_logout.middleware.auto_logout',
 ]
 
 ROOT_URLCONF = 'ipams.urls'
@@ -60,6 +64,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                # client-side script to redirect the user to the login page immediately after the idle-time expires
+                # 'django_auto_logout.context_processors.auto_logout_client',
             ],
         },
     },
@@ -91,9 +97,16 @@ DATABASES = {
     }
 }
 
-
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
+
+AUTHENTICATION_BACKENDS = [
+    # AxesBackend should be the first backend in the AUTHENTICATION_BACKENDS list.
+    'axes.backends.AxesBackend',
+
+    # Django ModelBackend is the default authentication backend.
+    'django.contrib.auth.backends.ModelBackend',
+]
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -143,8 +156,21 @@ LOGIN_REDIRECT_URL = '/'
 # django_heroku.settings(config=locals())
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-SESSION_COOKIE_AGE = 1800 # 30 minutes expiry when inactive
+# SESSION_COOKIE_AGE = 10 #1800 # 30 minutes expiry when inactive
 SESSION_SAVE_EVERY_REQUEST = True
+
+# DJANGO AUTO LOGOUT
+# AUTO_LOGOUT = {
+#     'IDLE_TIME': 1800, #logout a user if there are no requests for 30 mins
+#     'MESSAGE': 'You have been idle for too long. Please login again to continue.',
+#     'REDIRECT_TO_LOGIN_IMMEDIATELY': True,
+# }
+
+# limit login attempts
+AXES_FAILURE_LIMIT = 3
+AXES_ENABLE_ADMIN = True #show axes tables on django admin
+AXES_ONLY_USER_FAILURES = True #only lock based on username if limit exceeded
+# AXES_LOCKOUT_URL = '/'
 
 # recaptcha
 GOOGLE_RECAPTCHA_SECRET_KEY = '6Lckj-EbAAAAAEKoK1quZBP62i5NY57NlqDko-kL'
@@ -153,6 +179,20 @@ TEST_FORM = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  
+MAILER_EMAIL_BACKEND = EMAIL_BACKEND  
+EMAIL_HOST = [
+    'smtp.gmail.com',
+    'smtp-mail.outlook.com',
+    'smtp.office365.com',
+    'smtp.mail.yahoo.com',
+]
+# EMAIL_HOST_PASSWORD = 'your_password'  
+# EMAIL_HOST_USER = 'your_email'  
+EMAIL_PORT = 587 
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = True  
+ 
 
 # Channels
 # ASGI_APPLICATION = 'ipams.asgi.application'
@@ -164,3 +204,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #         },
 #     },
 # }
+
