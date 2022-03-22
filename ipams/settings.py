@@ -48,7 +48,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'axes.middleware.AxesMiddleware',
-    # 'django_auto_logout.middleware.auto_logout',
+    'django_auto_logout.middleware.auto_logout',
 ]
 
 ROOT_URLCONF = 'ipams.urls'
@@ -65,7 +65,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 # client-side script to redirect the user to the login page immediately after the idle-time expires
-                # 'django_auto_logout.context_processors.auto_logout_client',
+                'django_auto_logout.context_processors.auto_logout_client',
             ],
         },
     },
@@ -156,15 +156,15 @@ LOGIN_REDIRECT_URL = '/'
 # django_heroku.settings(config=locals())
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-# SESSION_COOKIE_AGE = 10 #1800 # 30 minutes expiry when inactive
+# SESSION_COOKIE_AGE = 1800 # 30 minutes expiry when inactive
 SESSION_SAVE_EVERY_REQUEST = True
 
 # DJANGO AUTO LOGOUT
-# AUTO_LOGOUT = {
-#     'IDLE_TIME': 1800, #logout a user if there are no requests for 30 mins
-#     'MESSAGE': 'You have been idle for too long. Please login again to continue.',
-#     'REDIRECT_TO_LOGIN_IMMEDIATELY': True,
-# }
+AUTO_LOGOUT = {
+    'IDLE_TIME': 1800, #logout a user if there are no requests for 30 mins
+    'MESSAGE': 'You have been idle for too long. Please login again to continue.',
+    'REDIRECT_TO_LOGIN_IMMEDIATELY': True,
+}
 
 # limit login attempts
 AXES_FAILURE_LIMIT = 3
