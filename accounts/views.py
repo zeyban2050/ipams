@@ -21,18 +21,27 @@ from django.contrib.auth.hashers import check_password
 from django.views.decorators.csrf import csrf_exempt
 from axes.decorators import axes_dispatch
 
-# from django.contrib.auth import get_user_model
-# from django.contrib.auth.models import User
-# from django.contrib.auth.tokens import default_token_generator
-# from django.contrib.sites.shortcuts import get_current_site
-# from django.core.mail import EmailMessage
-# from django.http import HttpResponse
-# from django.template.loader import render_to_string
-# from django.utils.encoding import force_bytes
-# from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
+from django.contrib.auth.tokens import default_token_generator
+from django.contrib.sites.shortcuts import get_current_site
+from django.core.mail import send_mail
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 
-# UserModel = get_user_model()
-# from .tokens import activation_token
+User = get_user_model()
+from .tokens import activation_token
+
+#custom function to check the request type since Httpis_ajax(request=request) method is deprecated.
+def is_ajax(request):
+    return request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
+
+#user must verify their account firsts through email after signing up
+#verification state of email
+def is_verified(request):
+    return state
 
 class RegisterView(View):
     name = 'accounts/register.html'
@@ -71,7 +80,7 @@ class SignupView(View):
         return render(request, self.name, {'form': form, 'hide_profile': True})
 
     def post(self, request):
-        if request.is_ajax():
+        if is_ajax(request=request):
             if request.POST.get("get_courses", 'false') == 'true':
                 courses = []
                 for course in Course.objects.all():
@@ -84,19 +93,44 @@ class SignupView(View):
             if form.is_valid():
                 user = form.save(commit=False)
                 password = form.cleaned_password()
-
-                # modification
-                
-
                 if password:
                     user.set_password(password)
                     user.role = UserRole.objects.get(pk=1)
+
+                    user.is_active = False
+                    # set email verification state to False 
+                    global state
+                    state = False
+                    is_verified(request)
+
                     user.save()
                     if request.POST.get('role', '0') == '2':
                         course = json.loads(request.POST.get('course'))
                         Student(user=user, course=Course.objects.get(pk=int(course[0]['id']))).save()
                     RoleRequest(user=user, role=UserRole.objects.get(pk=int(request.POST.get('role', 0)))).save()
-                    login(request, user)
+                    
+                    #composing the message that will be sent to user email account
+                    current_site = get_current_site(request)
+                    mail_subject = 'Activate your account.'
+                    message = render_to_string(
+                        'accounts/account_active_email.html', {
+                           'user': user,
+                           'domain': current_site.domain,
+                           'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                           'token': default_token_generator.make_token(user), 
+                        }
+                    )
+                    to_email = form.cleaned_data.get('email')
+                    send_mail(
+                        mail_subject, 
+                        message, 
+                        settings.EMAIL_HOST_USER, 
+                        [to_email],
+                        fail_silently=False
+                    )
+                    messages.success(request, 'Activate account by confirming your email address to complete the registration.')
+
+                    # login(request, user)
                     return redirect('/')
                 error_message = 'Password did not match!'
             else:
@@ -110,6 +144,29 @@ class SignupView(View):
                 messages.error(request, error_message)
             form = forms.RegistrationForm(request.POST)
             return render(request, self.name, {'form': form, 'hide_profile': True})
+
+#For activation of user account through email
+def activate(request, uidb64, token):
+    try:
+        uid = urlsafe_base64_decode(uidb64).decode()
+        user = User._default_manager.get(pk=uid)
+    except(TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        user.is_active = True
+        # set email verification state to True
+        global state
+        state = True
+        is_verified(request)
+
+        user.save()
+        user.backend = 'django.contrib.auth.backends.ModelBackend'
+        login(request, user)
+        messages.success(request, f'Welcome {user.username}. Thank you for your email confirmation. You are now logged in.')
+    else:
+        messages.error(request, 'Activation link is invalid!')
+    return redirect('records-index')
 
 # def login_user(request):
 #     if request.method == 'POST':
@@ -170,16 +227,20 @@ class LoginView(View):
                         password=form.cleaned_data.get('password'),
                     )
                     if user:
-                        login(request, user)
-                        # signals.user_logged_in.send(
-                        #     sender=User,
-                        #     request=request,
-                        #     user=user,
-                        # )
-                        print('if user')
-                        messages.success(request, f'Welcome {username}')
-                        if request.POST.get('next'):
-                            return redirect(request.POST.get('next'))
+                        # calling the state of email verification
+                        # whether the user has confirmed their email or not for activation
+                        if is_verified(request):
+                            login(request, user)
+                            # signals.user_logged_in.send(
+                            #     sender=User,
+                            #     request=request,
+                            #     user=user,
+                            # )
+                            messages.success(request, f'Welcome {username}')
+                            if request.POST.get('next'):
+                                return redirect(request.POST.get('next'))
+                        else:
+                            messages.error(request, 'Account is not activated yet. Please check your email address to verify.')
                     else:
                         # inform django-axes of failed login
                         signals.user_login_failed.send(

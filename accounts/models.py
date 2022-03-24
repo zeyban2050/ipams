@@ -51,7 +51,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 	USERNAME_FIELD = 'username'
 	REQUIRED_FIELDS = ['email']
 
-
 class College(models.Model):
 	name = models.CharField(max_length=100)
 	code = models.CharField(max_length=10, default=None)

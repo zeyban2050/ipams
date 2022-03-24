@@ -1098,7 +1098,7 @@ class AddResearch(View):
                 for user in User.objects.filter(role__in=[3, 4, 5]):
                     advisers.append({'value': user.username, 'id': user.pk})
                 return JsonResponse({'users': users, 'advisers': advisers})
-        if record_form.is_valid() and not request.is_ajax():
+        if record_form.is_valid() and not is_ajax(request=request):
             record = record_form.save(commit=False)
             file_is_valid = True
             file = record_form.cleaned_data.get('abstract_file', False)
