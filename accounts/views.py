@@ -38,11 +38,6 @@ from .tokens import activation_token
 def is_ajax(request):
     return request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
 
-#user must verify their account firsts through email after signing up
-#verification state of email
-def is_verified(request):
-    return state
-
 class RegisterView(View):
     name = 'accounts/register.html'
 
@@ -98,10 +93,7 @@ class SignupView(View):
                     user.role = UserRole.objects.get(pk=1)
 
                     user.is_active = False
-                    # set email verification state to False 
-                    global state
-                    state = False
-                    is_verified(request)
+                    user.is_verified = False
 
                     user.save()
                     if request.POST.get('role', '0') == '2':
@@ -155,10 +147,7 @@ def activate(request, uidb64, token):
 
     if user is not None and default_token_generator.check_token(user, token):
         user.is_active = True
-        # set email verification state to True
-        global state
-        state = True
-        is_verified(request)
+        user.is_verified = True
 
         user.save()
         user.backend = 'django.contrib.auth.backends.ModelBackend'
@@ -226,16 +215,11 @@ class LoginView(View):
                         username=form.cleaned_data.get('username'),
                         password=form.cleaned_data.get('password'),
                     )
+
                     if user:
-                        # calling the state of email verification
-                        # whether the user has confirmed their email or not for activation
-                        if is_verified(request):
+                        print(user.is_verified)
+                        if user.is_verified:
                             login(request, user)
-                            # signals.user_logged_in.send(
-                            #     sender=User,
-                            #     request=request,
-                            #     user=user,
-                            # )
                             messages.success(request, f'Welcome {username}')
                             if request.POST.get('next'):
                                 return redirect(request.POST.get('next'))
