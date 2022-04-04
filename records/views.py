@@ -1520,37 +1520,73 @@ class PendingRecordsView(View):
 
     def post(self, request):
         if request.user.role.id == 3:
-            with connection.cursor() as cursor:
-                cursor.execute(f"select records_record.id, records_record.title, records_checkedrecord.checked_by_id from records_record left join records_checkedrecord on records_record.id = records_checkedrecord.record_id where checked_by_id is null and records_record.adviser_id = {request.user.pk}")
-                rows = cursor.fetchall()
+            adviser_exclude = CheckedRecord.objects.select_related('record').all()
+            adviser_pending_records = Record.objects.filter(adviser=request.user.pk).exclude(pk__in=Subquery(adviser_exclude.values('record').distinct())).values('pk', 'title')
+            tuples_adviser_pending_records = [tuple(a.values()) for a in adviser_pending_records]
 
             data = []
-            for row in rows:
+            for row in tuples_adviser_pending_records:
                 data.append([
                     row[0],
                     '<a href="/record/pending/' + str(row[0]) + '">' + row[1] + '</a>',
                 ])
+            # with connection.cursor() as cursor:
+            #     cursor.execute(f"select records_record.id, records_record.title, records_checkedrecord.checked_by_id from records_record left join records_checkedrecord on records_record.id = records_checkedrecord.record_id where checked_by_id is null and records_record.adviser_id = {request.user.pk}")
+            #     rows = cursor.fetchall()
+            #     print('Rows')
+            #     print(rows)
+            # data = []
+            # for row in rows:
+            #     data.append([
+            #         row[0],
+            #         '<a href="/record/pending/' + str(row[0]) + '">' + row[1] + '</a>',
+            #     ])
         elif request.user.role.id == 4 or request.user.role.id == 7:
-            with connection.cursor() as cursor:
-                cursor.execute("SELECT records_record.id, records_record.title FROM records_record INNER JOIN records_checkedrecord ON records_record.id = records_checkedrecord.record_id INNER JOIN accounts_user ON records_checkedrecord.checked_by_id = accounts_user.id WHERE accounts_user.role_id = 3 AND records_checkedrecord.status = 'approved' AND records_record.id NOT IN (SELECT records_checkedrecord.record_id FROM records_checkedrecord INNER JOIN accounts_user ON records_checkedrecord.checked_by_id = accounts_user.id WHERE accounts_user.role_id = 4 or accounts_user.role_id = 7)")
-                rows = cursor.fetchall()
-            data = []
-            for row in rows:
-                data.append([
-                    row[0],
-                    f'<a href="/record/pending/{row[0]}">{row[1]}</a>'
-                ])
+            ktto_exclude = CheckedRecord.objects.select_related('record').filter(Q(checked_by__in=Subquery(User.objects.filter(role=4).values('pk'))) | Q(checked_by__in=Subquery(User.objects.filter(role=7).values('pk'))))
+            ktto_include = CheckedRecord.objects.select_related('record').filter(status='approved', checked_by__in=Subquery(User.objects.filter(role=3).values('pk')))
+            ktto_pending_records = Record.objects.filter(pk__in=Subquery(ktto_include.values('record'))).exclude(pk__in=Subquery(ktto_exclude.values('record'))).values('pk', 'title')
+            tuples_ktto_pending_records = [tuple(k.values()) for k in ktto_pending_records]
 
-        elif request.user.role.id == 5:
-            with connection.cursor() as cursor:
-                cursor.execute("SELECT records_record.id, records_record.title FROM records_record INNER JOIN records_checkedrecord ON records_record.id = records_checkedrecord.record_id INNER JOIN accounts_user ON records_checkedrecord.checked_by_id = accounts_user.id WHERE (accounts_user.role_id = 4 OR accounts_user.role_id = 7) AND records_checkedrecord.status = 'approved' AND records_record.id NOT IN (SELECT records_checkedrecord.record_id FROM records_checkedrecord INNER JOIN accounts_user ON records_checkedrecord.checked_by_id = accounts_user.id WHERE accounts_user.role_id = 5)")
-                rows = cursor.fetchall()
             data = []
-            for row in rows:
+            for row in tuples_ktto_pending_records:
                 data.append([
                     row[0],
                     f'<a href="/record/pending/{row[0]}">{row[1]}</a>'
                 ])
+            # with connection.cursor() as cursor:
+            #     cursor.execute("SELECT records_record.id, records_record.title FROM records_record INNER JOIN records_checkedrecord ON records_record.id = records_checkedrecord.record_id INNER JOIN accounts_user ON records_checkedrecord.checked_by_id = accounts_user.id WHERE accounts_user.role_id = 3 AND records_checkedrecord.status = 'approved' AND records_record.id NOT IN (SELECT records_checkedrecord.record_id FROM records_checkedrecord INNER JOIN accounts_user ON records_checkedrecord.checked_by_id = accounts_user.id WHERE accounts_user.role_id = 4 or accounts_user.role_id = 7)")
+            #     rows = cursor.fetchall()
+            #     print('Rows')
+            #     print(rows)
+            # data = []
+            # for row in rows:
+            #     data.append([
+            #         row[0],
+            #         f'<a href="/record/pending/{row[0]}">{row[1]}</a>'
+            #     ])
+        elif request.user.role.id == 5:
+            rdco_exclude = CheckedRecord.objects.select_related('record').filter(checked_by__in=Subquery(User.objects.filter(role=5).values('pk')))
+            rdco_include = CheckedRecord.objects.select_related('record').filter(Q(checked_by__in=Subquery(User.objects.filter(role=4).values('pk'))) | Q(checked_by__in=Subquery(User.objects.filter(role=7).values('pk'))), status='approved')
+            rdco_pending_records = Record.objects.filter(pk__in=Subquery(rdco_include.values('record'))).exclude(pk__in=Subquery(rdco_exclude.values('record'))).values('pk','title')
+            tuples_rdco_pending_records = [tuple(r.values()) for r in rdco_pending_records]
+
+            data = []
+            for row in tuples_rdco_pending_records:
+                data.append([
+                    row[0],
+                    f'<a href="/record/pending/{row[0]}">{row[1]}</a>'
+                ])
+            # with connection.cursor() as cursor:
+            #     cursor.execute("SELECT records_record.id, records_record.title FROM records_record INNER JOIN records_checkedrecord ON records_record.id = records_checkedrecord.record_id INNER JOIN accounts_user ON records_checkedrecord.checked_by_id = accounts_user.id WHERE (accounts_user.role_id = 4 OR accounts_user.role_id = 7) AND records_checkedrecord.status = 'approved' AND records_record.id NOT IN (SELECT records_checkedrecord.record_id FROM records_checkedrecord INNER JOIN accounts_user ON records_checkedrecord.checked_by_id = accounts_user.id WHERE accounts_user.role_id = 5)")
+            #     rows = cursor.fetchall()
+            #     print('ROWS')
+            #     print(rows)
+            # data = []
+            # for row in rows:
+            #     data.append([
+            #         row[0],
+            #         f'<a href="/record/pending/{row[0]}">{row[1]}</a>'
+            #     ])
         return JsonResponse({"data": data})
 
 
@@ -1618,26 +1654,55 @@ class Dashboard(View):
                         psced_classification=PSCEDClassification.objects.get(pk=psced.id)).count()})
                 for record_per_year in records_per_year:
                     records_per_year_count.append({'year': record_per_year['year_accomplished'], 'count': record_per_year['year_count']})
-                with connection.cursor() as cursor:
-                    cursor.execute("SELECT year_accomplished, COUNT(year_accomplished) AS year_count FROM (SELECT DISTINCT year_accomplished, psced_classification_id FROM (select year_accomplished, psced_classification_id from records_record inner join records_checkedrecord on records_record.id=record_id inner join accounts_user on records_checkedrecord.checked_by_id=accounts_user.id where accounts_user.role_id=5 and records_checkedrecord.status='approved') as recordtbl) as tbl GROUP BY year_accomplished")
-                    rows = cursor.fetchall()
-                    for row in rows:
-                        psced_per_year_count.append({'year': row[0], 'psced_count': row[1]})
-                with connection.cursor() as cursor:
-                    cursor.execute(
-                        f"select records_record.id, records_record.title, records_checkedrecord.checked_by_id from records_record left join records_checkedrecord on records_record.id = records_checkedrecord.record_id where checked_by_id is null")
-                    rows = cursor.fetchall()
-                    adviser_pending_count = len(rows)
-                with connection.cursor() as cursor:
-                    cursor.execute(
-                        "SELECT records_record.id, records_record.title FROM records_record INNER JOIN records_checkedrecord ON records_record.id = records_checkedrecord.record_id INNER JOIN accounts_user ON records_checkedrecord.checked_by_id = accounts_user.id WHERE accounts_user.role_id = 3 AND records_checkedrecord.status = 'approved' AND records_record.id NOT IN (SELECT records_checkedrecord.record_id FROM records_checkedrecord INNER JOIN accounts_user ON records_checkedrecord.checked_by_id = accounts_user.id WHERE accounts_user.role_id = 4 or accounts_user.role_id = 7)")
-                    rows = cursor.fetchall()
-                    ktto_pending_count = len(rows)
-                with connection.cursor() as cursor:
-                    cursor.execute(
-                        "SELECT records_record.id, records_record.title FROM records_record INNER JOIN records_checkedrecord ON records_record.id = records_checkedrecord.record_id INNER JOIN accounts_user ON records_checkedrecord.checked_by_id = accounts_user.id WHERE accounts_user.role_id = 4 AND records_checkedrecord.status = 'approved' AND records_record.id NOT IN (SELECT records_checkedrecord.record_id FROM records_checkedrecord INNER JOIN accounts_user ON records_checkedrecord.checked_by_id = accounts_user.id WHERE accounts_user.role_id = 5)")
-                    rows = cursor.fetchall()
-                    rdco_pending_count = len(rows)
+
+                # NUMBER OF CLASSIFICATIONS PER YEAR
+                year_count = records.values('year_accomplished').distinct().annotate(psced_count=Count('psced_classification', distinct=True)).order_by('year_accomplished')
+                # Convert all year_count values into a list of tuples
+                tuples_year_count = [tuple(d.values()) for d in year_count]
+                for row in tuples_year_count:
+                    psced_per_year_count.append({'year': row[0], 'psced_count': row[1]})
+                # with connection.cursor() as cursor:
+                #     cursor.execute("SELECT year_accomplished, COUNT(year_accomplished) AS year_count FROM (SELECT DISTINCT year_accomplished, psced_classification_id FROM (select year_accomplished, psced_classification_id from records_record inner join records_checkedrecord on records_record.id=record_id inner join accounts_user on records_checkedrecord.checked_by_id=accounts_user.id where accounts_user.role_id=5 and records_checkedrecord.status='approved') as recordtbl) as tbl GROUP BY year_accomplished")
+                #     rows = cursor.fetchall()
+                #     print(rows)
+                #     for row in rows:
+                #         psced_per_year_count.append({'year': row[0], 'psced_count': row[1]})
+
+                # Pending Adviser
+                adviser_exclude = CheckedRecord.objects.select_related('record').all()
+                adviser_pending = Record.objects.exclude(pk__in=Subquery(adviser_exclude.values('record').distinct())).values('pk', 'title')
+                adviser_pending_count = adviser_pending.count()
+                # with connection.cursor() adviser_pending_count = adviser_pending.count()s cursor:
+                #     cursor.execute(
+                #         f"select records_record.id, records_record.title, records_checkedrecord.checked_by_id from records_record left join records_checkedrecord on records_record.id = records_checkedrecord.record_id where checked_by_id is null")
+                #     rows = cursor.fetchall()
+                #     print(rows)
+                #     adviser_pending_count = len(rows)
+
+                # Pending KTTO
+                ktto_exclude = CheckedRecord.objects.select_related('record').filter(Q(checked_by__in=Subquery(User.objects.filter(role=4).values('pk'))) | Q(checked_by__in=Subquery(User.objects.filter(role=7).values('pk'))))
+                ktto_include = CheckedRecord.objects.select_related('record').filter(status='approved', checked_by__in=Subquery(User.objects.filter(role=3).values('pk')))
+                ktto_pending = Record.objects.filter(pk__in=Subquery(ktto_include.values('record'))).exclude(pk__in=Subquery(ktto_exclude.values('record'))).values('pk', 'title')         
+                ktto_pending_count = ktto_pending.count()
+                # with connection.cursor() as cursor:
+                    # cursor.execute(
+                    #     "SELECT records_record.id, records_record.title FROM records_record INNER JOIN records_checkedrecord ON records_record.id = records_checkedrecord.record_id INNER JOIN accounts_user ON records_checkedrecord.checked_by_id = accounts_user.id WHERE accounts_user.role_id = 3 AND records_checkedrecord.status = 'approved' AND records_record.id NOT IN (SELECT records_checkedrecord.record_id FROM records_checkedrecord INNER JOIN accounts_user ON records_checkedrecord.checked_by_id = accounts_user.id WHERE accounts_user.role_id = 4 or accounts_user.role_id = 7)")
+                    # rows = cursor.fetchall()
+                    # print(rows)
+                    # ktto_pending_count = len(rows)
+
+                # Pending RDCO
+                rdco_exclude = CheckedRecord.objects.select_related('record').filter(checked_by=Subquery(User.objects.filter(role=5).values('pk')))
+                rdco_include = CheckedRecord.objects.select_related('record').filter(checked_by__in=Subquery(User.objects.filter(role=4).values('pk')), status='approved')
+                rdco_pending = Record.objects.filter(pk__in=Subquery(rdco_include.values('record'))).exclude(pk__in=Subquery(rdco_exclude.values('record'))).values('pk', 'title')
+                print(rdco_pending)
+                rdco_pending_count = rdco_pending.count()
+                # with connection.cursor() as cursor:
+                #     cursor.execute(
+                #         "SELECT records_record.id, records_record.title FROM records_record INNER JOIN records_checkedrecord ON records_record.id = records_checkedrecord.record_id INNER JOIN accounts_user ON records_checkedrecord.checked_by_id = accounts_user.id WHERE accounts_user.role_id = 4 AND records_checkedrecord.status = 'approved' AND records_record.id NOT IN (SELECT records_checkedrecord.record_id FROM records_checkedrecord INNER JOIN accounts_user ON records_checkedrecord.checked_by_id = accounts_user.id WHERE accounts_user.role_id = 5)")
+                #     rows = cursor.fetchall()
+                #     rdco_pending_count = len(rows)
+                #     print(rows)
                 record_uploads = RecordUpload.objects.all()
 
                 def get_doc_counts(docs):
