@@ -47,9 +47,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 	is_admin = models.BooleanField(default=False)
 	is_staff = models.BooleanField(default=False)
 	is_superuser = models.BooleanField(default=False)
-
 	is_verified = models.BooleanField(default=False)
-
 	objects = UserManager()
 	USERNAME_FIELD = 'username'
 	REQUIRED_FIELDS = ['email']
@@ -105,3 +103,5 @@ class Setting(models.Model):
 	value = RichTextField(blank=True, null=True)
 	date_created = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 	date_updated = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+
+

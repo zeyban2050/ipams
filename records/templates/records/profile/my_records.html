@@ -9,6 +9,8 @@
 		    		"headers": { "X-CSRFToken": '{{ csrf_token }}' },
 		    		"type": "post",
 		    	},
+                // When deferred rendering is enabled, rather than having DataTables create all TR and TD nodes required for the table when the data is loaded, DataTables will only create the nodes required for each individual row at the time of that row being drawn on the page (these nodes are then retained in case they are needed again so they aren't created multiple times). This can give a significant performance increase, since a lot less work is done at initialisation time.
+                "deferRender": true,
                 "scrollX": true,
 		    	"responsive": true,
         		"columnDefs": [

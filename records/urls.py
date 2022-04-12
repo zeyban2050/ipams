@@ -30,6 +30,8 @@ urlpatterns = [
     path('records/pending/', views.PendingRecordsView.as_view(), name='records-pending'),
     path('records/approved/', views.ApprovedRecordsView.as_view(), name='records-approved'),
     path('records/declined/', views.DeclinedRecordsView.as_view(), name='records-declined'),
+
+    path('lockout', views.LockoutPage.as_view(), name='lockout-page'),
 ]
 
 # urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

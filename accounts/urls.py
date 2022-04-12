@@ -15,6 +15,5 @@ urlpatterns = [
     path('password/change', views.change_password, name='accounts-change-password'),
     path('profile/pending/count', views.get_pending_count, name='accounts-get-pending-count'),
     path('settings/', views.SettingsView.as_view(), name='accounts-settings'),
-
     path('activate/<uidb64>/<token>/',views.activate, name='activate'),
 ]

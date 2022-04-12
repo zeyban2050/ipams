@@ -16,6 +16,8 @@ from . import forms
 from .decorators import authorized_roles
 from .models import User, UserRole, RoleRequest, Course, Student, Log, Setting
 from records.models import CheckedRecord, Record
+from notifications.models import Notification, NotificationType
+from accounts.auxfunctions import roleRequestStudent, roleRequestAdviser
 from django.db.models import Q, Subquery
 from django.contrib.auth.hashers import check_password
 
@@ -100,6 +102,9 @@ class SignupView(View):
                     if request.POST.get('role', '0') == '2':
                         course = json.loads(request.POST.get('course'))
                         Student(user=user, course=Course.objects.get(pk=int(course[0]['id']))).save()
+                        roleRequestStudent(request, user.id, Course.objects.only('name').get(pk=int(course[0]['id'])).name)
+                    elif request.POST.get('role', '0') == '3':
+                        roleRequestAdviser(request, user.id)
                     RoleRequest(user=user, role=UserRole.objects.get(pk=int(request.POST.get('role', 0)))).save()
                     
                     #composing the message that will be sent to user email account
@@ -218,34 +223,38 @@ class LoginView(View):
                     )
 
                     if user:
-                        print(user.is_verified)
                         if user.is_verified:
                             login(request, user)
+                            if request.user.role.id == 5: #rdco
+                                notifications = Notification.objects.filter(Q(to_rdco=True) | Q(recipient=user.id))
+                                request.session['notif_count'] = notifications.count()
+                            elif request.user.role.id == 4: #ktto
+                                notifications = Notification.objects.filter(Q(to_ktto=True) | Q(recipient=user.id))
+                                request.session['notif_count'] = notifications.count()
+                            elif request.user.role.id == 3: #adviser
+                                notifications = Notification.objects.filter(Q(recipient=user.id) | Q(notif_type=NotificationType.objects.get(pk=6)) | Q(notif_type=NotificationType.objects.get(pk=1)) | Q(notif_type=NotificationType.objects.get(pk=2)))
+                                request.session['notif_count'] = notifications.count()
+                            elif request.user.role.id == 7: #tbi
+                                notifications = Notification.objects.filter(Q(to_ktto=True) | Q(recipient=user.id))
+                                request.session['notif_count'] = notifications.count()
+                            elif request.user.role.id == 2: #student
+                                notifications = Notification.objects.filter(recipient=user.id)
+                                request.session['notif_count'] = notifications.count()
+
                             messages.success(request, f'Welcome {username}')
                             if request.POST.get('next'):
                                 return redirect(request.POST.get('next'))
                         else:
                             messages.error(request, 'Account is not activated yet. Please check your email address to verify.')
                     else:
-                        # inform django-axes of failed login
-                        signals.user_login_failed.send(
-                            sender=User,
-                            request=request,
-                            credentials={
-                                'username': form.cleaned_data.get('username'),
-                            },
-                        )
-                        print('if user else')
+                        # signals.user_login_failed.send(
+                        #     sender=User,
+                        #     request=request,
+                        #     credentials={
+                        #         'username': form.cleaned_data.get('username'),
+                        #     },
+                        # )
                         messages.error(request, 'Invalid Username/Password')
-                else:
-                    # signals.user_login_failed.send(
-                    #     sender=User,
-                    #     request=request,
-                    #     credentials={
-                    #         'username': form.cleaned_data.get('username'),
-                    #     },
-                    # )
-                    messages.error(request, 'Invalid Form')  
             else:
                 messages.error(request, 'Recaptcha is required')
         return redirect('records-index')

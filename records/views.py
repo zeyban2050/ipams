@@ -26,6 +26,7 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from . import forms
 from accounts.forms import LoginForm
+from records.auxfunctions import *
 
 FILE_LENGTH = 5242880
 
@@ -174,6 +175,7 @@ class Home(View):
                         accounts_str += f', {user.username}'
                     RoleRequest.objects.filter(user=user).delete()
                 Log(user=request.user, action=f'accounts: {accounts_str} account_role changed to \"{UserRole.objects.get(pk=role_id)}\" by: {request.user.username}').save()
+                roleRequestApproved(request, request.user.id, user.id)
             # setting datatable records
             for record in records:
                 data.append([
@@ -528,6 +530,8 @@ class PendingRecordView(View):
                 record_upload = RecordUpload.objects.filter(upload=upload, record=record).first()
                 CheckedUpload(comment=comment, checked_by=request.user,
                               record_upload=record_upload).save()
+
+                recordComment(request, request.user.id, record.id, UserRecord.objects.get(record=record.id).user.id)
                 return JsonResponse({'success': True})
             else:
                 return JsonResponse({'success': False})
@@ -541,6 +545,9 @@ class PendingRecordView(View):
                     checked_record.record = Record.objects.get(pk=record_id)
                     checked_record.status = request.POST.get('status')
                     checked_record.save()
+
+                    status = request.POST.get('status')
+                    recordStatus(request, request.user.id, record_id, UserRecord.objects.get(record=record_id).user.id, status)
                 else:
                     print('invalid form')
                 return redirect('records-pending')
@@ -624,7 +631,9 @@ class MyRecordView(View):
             # resubmitting
             if request.POST.get('resubmit', 'false') == 'true':
                 checked_record = CheckedRecord.objects.get(record=Record.objects.get(pk=record_id), status='declined')
+                recipient = checked_record
                 checked_record.delete()
+                resubmission(request, request.user.id, record_id, recipient)
                 return JsonResponse({'success': True})
             # updating record tags
             elif request.POST.get('tags_update', 'false') == 'true':
@@ -1033,6 +1042,8 @@ class Add(View):
                     Collaboration(collaboration_type=CollaborationType.objects.get(pk=collaboration_types[i]),
                                   industry=industries[i], institution=institutions[i], record=record).save()
                 messages.success(request, 'Record submitted!')
+                # --> inhere
+                newRecordAdded(request, request.user.id, record.adviser.id, record.id)
                 return redirect('records-index')
             elif not file_is_valid:
                 messages.error(request, 'The file size must not be more than 5MB')
@@ -1155,6 +1166,7 @@ class AddResearch(View):
                 for i, collaboration_type in enumerate(collaboration_types):
                     Collaboration(collaboration_type=CollaborationType.objects.get(pk=collaboration_types[i]),
                                   industry=industries[i], institution=institutions[i], record=record).save()
+                newRecordAdded(request, request.user.id, record.adviser.id, record.id)
                 return redirect('records-index')
             elif not file_is_valid:
                 error = {'title': 'Unable to save record',
@@ -1296,6 +1308,7 @@ class Edit(View):
                 for i, collaboration_type in enumerate(collaboration_types):
                     Collaboration(collaboration_type=CollaborationType.objects.get(pk=collaboration_types[i]),
                                   industry=industries[i], institution=institutions[i], record=record).save()
+                newRecordAdded(request, request.user.id, record.adviser.id, record.id)
                 return JsonResponse({'success': 1})
             elif not file_is_valid:
                 error = {'title': 'Unable to save record',
@@ -2052,6 +2065,7 @@ class DashboardManageRecord(View):
                 comment = request.POST.get('comment', '')
                 record_upload = RecordUpload.objects.filter(upload=upload, record=record).first()
                 CheckedUpload(comment=comment, checked_by=request.user, record_upload=record_upload).save()
+                recordComment(request, request.user.id, record_id, UserRecord.objects.get(record=record_id).user.id)
                 return JsonResponse({'success': True})
             else:
                 return JsonResponse({'success': False})
@@ -2065,6 +2079,8 @@ class DashboardManageRecord(View):
                     checked_record.record = Record.objects.get(pk=record_id)
                     checked_record.status = request.POST.get('status')
                     checked_record.save()
+                    status = request.POST.get('status')
+                    recordStatus(request, request.user.id, record.id, UserRecord.objects.only('user').get(record=record_id).user.id, status)
                 else:
                     print('invalid form')
                 return redirect('records-view', record_id)
@@ -2110,3 +2126,11 @@ class DashboardManageAccounts(View):
                         accounts_str += f', {user.username}'
                     RoleRequest.objects.filter(user=user).delete()
                 Log(user=request.user, action=f'accounts: {accounts_str} account_role changed to \"{UserRole.objects.get(pk=role_id)}\" by: {request.user.username}').save()
+                roleRequestApproved(request, request.user.id, user.id)
+
+class LockoutPage(View):
+    name="records/lockout_page.html"
+    def get(self, request):
+        return render(request, self.name)
+
+

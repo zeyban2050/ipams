@@ -33,6 +33,24 @@
                 </div>
                 {% if not hide_profile %}
                 <div class="col-lg-4 d-flex justify-content-end" style="margin-bottom:10px; margin-top:10px">
+                    {% if user.role.id == 1 or user.role.id == 2 %}
+                        <a href="{% url 'notifications:student_notifications' %}" style="padding-right: 15px; color: #FFFFFF;"><i class="fa fa-bell fa-lg" aria-hidden="true" style="padding-top: 5px; padding-right: 5px; color: #FFFFFF"></i><span> {{ notif_count }} </span></a>
+                    {% endif %} 
+                    {% if user.role.id == 3 %}
+                        <a href="{% url 'notifications:adviser_notifications' %}" style="padding-right: 15px; color: #FFFFFF;"><i class="fa fa-bell fa-lg" aria-hidden="true" style="padding-top: 5px; padding-right: 5px; color: #FFFFFF"></i><span> {{ notif_count }} </span></a>
+                    {% endif %} 
+                    {% if user.role.id == 4 %}
+                        <a href="{% url 'notifications:ktto_notifications' %}" style="padding-right: 15px; color: #FFFFFF;"><i class="fa fa-bell fa-lg" aria-hidden="true" style="padding-top: 5px; padding-right: 5px; color: #FFFFFF"></i><span> {{ notif_count }} </span></a>
+                    {% endif %} 
+                    {% if user.role.id == 5 %}
+                        <a href="{% url 'notifications:rdco_notifications' %}" style="padding-right: 15px; color: #FFFFFF;"><i class="fa fa-bell fa-lg" aria-hidden="true" style="padding-top: 5px; padding-right: 5px; color: #FFFFFF"></i><span> {{ notif_count }} </span></a>
+                    {% endif %} 
+                    {% if user.role.id == 6 %}
+                        <a href="{% url 'notifications:itso_notifications' %}" style="padding-right: 15px; color: #FFFFFF;"><i class="fa fa-bell fa-lg" aria-hidden="true" style="padding-top: 5px; padding-right: 5px; color: #FFFFFF"></i><span> {{ notif_count }} </span></a>
+                    {% endif %} 
+                    {% if user.role.id == 7 %}
+                        <a href="{% url 'notifications:tbi_notifications' %}" style="padding-right: 15px; color: #FFFFFF;"><i class="fa fa-bell fa-lg" aria-hidden="true" style="padding-top: 5px; padding-right: 5px; color: #FFFFFF"></i><span> {{ notif_count }} </span></a>
+                    {% endif %} 
                     <div class="dropdown">
                         <button data-backdrop="false" type="button" class="btn base-bg-primary" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <i class="fa fa-bars fa-md"></i>
@@ -41,7 +59,6 @@
                             {% if user.is_authenticated %}
                             <label class="dropdown-item disabled">{{ user.username }}</label>
                             <a class="dropdown-item" href="#" data-toggle="modal" data-target="#profile-modal">Profile</a>
-                            <a class="dropdown-item" href="{% url 'notifications-home' %}">Notifications</a>
                             {% if user.role.id > 3 %}
                             <a class="dropdown-item" href="{% url 'records-dashboard' %}">Dashboard</a>
                             {% endif %}
@@ -269,6 +286,7 @@
     <script src="{% static 'js/sweetalert/sweetalert2.min.js' %}"></script>
     <script src="{% static 'js/chart/Chart.min.js' %}"></script>
     <script src="{% static 'tagify/tagify.min.js' %}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/5.5.2/bootbox.min.js"></script>
 
     <script>
         $("#edit-profile").on("click",function(){

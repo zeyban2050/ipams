@@ -172,3 +172,4 @@ class CheckedUpload(models.Model):
     checked_by = models.ForeignKey('accounts.User', on_delete=models.DO_NOTHING)
     record_upload = models.ForeignKey(RecordUpload, on_delete=models.CASCADE)
     date_checked = models.DateTimeField(auto_now_add=True)
+
