@@ -36,8 +36,6 @@ INSTALLED_APPS = [
     'ckeditor',
     'django_extensions',
     'axes',
-
-    'social.apps.django_app.default',
     # 'channels',
 ]
 
@@ -106,10 +104,9 @@ DATABASES = {
 AUTHENTICATION_BACKENDS = [
     # AxesBackend should be the first backend in the AUTHENTICATION_BACKENDS list.
     'axes.backends.AxesBackend',
+
     # Django ModelBackend is the default authentication backend.
     'django.contrib.auth.backends.ModelBackend',
-
-    'oauth.backends.AzureADOAuth2',
 ]
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -212,7 +209,3 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 #     },
 # }
 
-SOCIAL_AUTH_AZUREAD_OAUTH2_KEY = '622ea13b-69c1-4173-8527-59b0fa928d7a'
-SOCIAL_AUTH_AZUREAD_OAUTH2_SECRET = '9e9ca00f-c0b6-4dae-ba73-285866af5068'
-SOCIAL_AUTH_AZUREAD_OAUTH2_RESOURCE = 'https://cebuinstituteoftechnology-my.sharepoint.com'
-SOCIAL_AUTH_AZUREAD_OAUTH2_SCOPE = ['Files.ReadWrite',]
