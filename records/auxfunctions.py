@@ -31,12 +31,10 @@ def newRecordAdded(request, userID, adviserID, recordID):
 		course = ''
 		role = UserRole.objects.get(pk=7)
 
-	notification = Notification(user=user, course=course, role=role, 
-		recipient=adviser, record=record, notif_type=notif_type, 
-		to_adviser=True, is_read=False, date_created=dt.now())
+	notification = Notification(user=user, course=course, role=role, recipient=adviser, record=record, notif_type=notif_type, 
+		is_read=False, date_created=dt.now())
 	
 	notification.save()
-	messages.success(request, "Notif sent")
 
 # resubmission of record -> whoever decline will receive the notification
 def resubmission(request, userID, recordID, checkedByID):
@@ -60,44 +58,20 @@ def resubmission(request, userID, recordID, checkedByID):
 		course = ''
 		role = UserRole.objects.get(pk=7)
 
-	if recipient.role.name == 'Adviser':
-		to_adviser=True
-		to_ktto=False 
-		to_rdco=False
-	if recipient.role.name == 'KTTO':
-		to_adviser=False
-		to_ktto=True 
-		to_rdco=False
-	if recipient.role.name == 'RDCO':
-		to_adviser=False
-		to_ktto=False 
-		to_rdco=True
-
 	notification = Notification(user=user, course=course, role=role, recipient=recipient, record=record, 
-			notif_type=NotificationType.objects.get(pk=5), 
-			to_adviser=to_adviser, to_ktto=to_ktto, to_rdco=to_rdco, is_read=False, date_created=dt.now())
+			notif_type=NotificationType.objects.get(pk=5), is_read=False, date_created=dt.now())
 
 	notification.save()
-	messages.success(request, "Notif sent")
 
 # role request approved 
 def roleRequestApproved(request, userID, recipientID):
 	user = User.objects.get(pk=userID)
 	recipient = User.objects.get(pk=recipientID)
 
-	if recipient.role.name == 'Student':
-		to_student = True
-		to_adviser = False
-	if recipient.role.name == 'Adviser':
-		to_adviser = True
-		to_student = False
-
 	notification = Notification(user=user, role=user.role, recipient=recipient, 
-		notif_type=NotificationType.objects.get(pk=6), 
-		to_adviser=to_adviser, to_student=to_student, to_ktto=True, to_rdco=True, is_read=False, date_created=dt.now())
+		notif_type=NotificationType.objects.get(pk=6), to_ktto=True, to_rdco=True, is_read=False, date_created=dt.now())
 
 	notification.save()
-	messages.success(request, "Role Request Status sent")
 
 # comments	
 def recordComment(request, userID, recordID, recipientID):
@@ -105,34 +79,10 @@ def recordComment(request, userID, recordID, recipientID):
 	record = Record.objects.get(pk=recordID)
 	recipient = User.objects.get(pk=recipientID)
 
-	if recipient.role.name == 'Student':
-		to_student = True
-		to_adviser=False
-		to_ktto=False 
-		to_rdco=False
-	if recipient.role.name == 'Adviser':
-		to_adviser=True
-		to_ktto=False 
-		to_rdco=False
-		to_student = False
-	if recipient.role.name == 'KTTO':
-		to_adviser=False
-		to_ktto=True 
-		to_rdco=False
-		to_student = False
-	if recipient.role.name == 'RDCO':
-		to_adviser=False
-		to_ktto=False 
-		to_rdco=True
-		to_student = False
-
 	notification = Notification(user=user, role=user.role, recipient=recipient, record=record, 
-		notif_type=NotificationType.objects.get(pk=7), 
-		to_adviser=to_adviser, to_ktto=to_ktto, to_rdco=to_rdco, 
-		to_student=to_student, is_read=False, date_created=dt.now())
+		notif_type=NotificationType.objects.get(pk=7), is_read=False, date_created=dt.now())
 
 	notification.save()
-	messages.success(request, "Comment sent")
 
 # record approved or decline --> adviser first, then ktto then rdco after each approval
 def recordStatus(request, userID, recordID, recipientID, status):
@@ -158,11 +108,9 @@ def recordStatus(request, userID, recordID, recipientID, status):
 				notif_type=notif_type, to_rdco=True, is_read=False, date_created=dt.now())
 		if user.role.name == 'RDCO':
 			notification = Notification(user=user, role=user.role, recipient=recipient, record=record, 
-				notif_type=NotificationType.objects.get(pk=8), to_rdco=True, to_student=True, is_read=False, date_created=dt.now())
+				notif_type=NotificationType.objects.get(pk=8), is_read=False, date_created=dt.now())
 	elif status == 'declined':
 		notification = Notification(user=user, role=user.role, recipient=recipient, record=record, 
-			notif_type=NotificationType.objects.get(pk=9), to_student=True, is_read=False, date_created=dt.now())
+			notif_type=NotificationType.objects.get(pk=9), is_read=False, date_created=dt.now())
 
 	notification.save()
-	messages.success(request, "Record has been approved")
-

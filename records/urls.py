@@ -32,6 +32,7 @@ urlpatterns = [
     path('records/declined/', views.DeclinedRecordsView.as_view(), name='records-declined'),
 
     path('lockout', views.LockoutPage.as_view(), name='lockout-page'),
+    path('dashboard/reset/accounts', views.LockedAccountsView.as_view(), name='reset-accounts')
 ]
 
 # urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -28,6 +28,23 @@ from . import forms
 from accounts.forms import LoginForm
 from records.auxfunctions import *
 
+from axes.models import AccessAttempt, AccessBase
+from axes.utils import reset
+
+# import requests
+# import urllib
+# import os
+# from getpass import getpass
+# import time
+# import adal
+# import onedrivesdk_fork as onedrivesdk
+# from onedrivesdk_fork.helpers import GetAuthCodeServer
+# from onedrivesdk_fork.helpers.resource_discovery import ResourceDiscoveryRequest
+# import cloudsync
+# import cloudsync_onedrive
+# from six.moves import urllib
+# import msal
+
 FILE_LENGTH = 5242880
 
 def update_record_tags(request, record_id):
@@ -2128,9 +2145,29 @@ class DashboardManageAccounts(View):
                 Log(user=request.user, action=f'accounts: {accounts_str} account_role changed to \"{UserRole.objects.get(pk=role_id)}\" by: {request.user.username}').save()
                 roleRequestApproved(request, request.user.id, user.id)
 
+
 class LockoutPage(View):
     name="records/lockout_page.html"
     def get(self, request):
         return render(request, self.name)
 
 
+class LockedAccountsView(View):
+    name="records/dashboard/reset_locked_accounts.html"
+
+    @method_decorator(authorized_roles(roles=['ktto', 'rdco', 'tbi', 'itso']))
+    @method_decorator(login_required(login_url='/'))
+    def get(self, request):
+        attempts = AccessAttempt.objects.all()
+        context = {
+            'attempts': attempts,
+        }
+        return render(request, self.name, context)
+    def post(self, request):
+        if request.method == 'POST':
+            if request.POST.get('resetAccount'):
+                accounts = request.POST.getlist('listOfAccounts[]')
+                print(accounts)
+                for account in accounts:
+                    reset(username=account)
+                return JsonResponse({'success': True})

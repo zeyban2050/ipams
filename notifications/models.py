@@ -19,8 +19,7 @@ class Notification(models.Model):
     role = models.ForeignKey(UserRole, on_delete=models.CASCADE, blank=True, null=True, default=7, related_name='role') # role of who sent the notification
     record = models.ForeignKey(Record, on_delete=models.CASCADE, blank=True, null=True, related_name='record') # current record if record
     notif_type = models.ForeignKey(NotificationType, on_delete=models.DO_NOTHING, blank=True, null=True, related_name='notif_type') # type of notification
-    to_student = models.BooleanField(default=False)
-    to_adviser = models.BooleanField(default=False)
+    read_by = models.ManyToManyField(User)
     to_ktto = models.BooleanField(default=False)
     to_rdco = models.BooleanField(default=False)
     is_read = models.BooleanField(default=False)

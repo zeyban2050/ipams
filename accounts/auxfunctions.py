@@ -9,7 +9,7 @@ def roleRequestStudent(request, userID, course):
 	print(user.first_name)
 
 	notification = Notification(user=user, course=course, role=UserRole.objects.get(pk=2), 
-		to_adviser=True, to_ktto=True, to_rdco=True, notif_type=NotificationType.objects.get(pk=1), is_read=False, date_created=dt.now())
+		to_ktto=True, to_rdco=True, notif_type=NotificationType.objects.get(pk=1), is_read=False, date_created=dt.now())
 	
 	notification.save()
 	messages.success(request, "Role Request to be a student sent")
@@ -20,7 +20,7 @@ def roleRequestAdviser(request, userID):
 	print(user.first_name)
 
 	notification = Notification(user=user, role=UserRole.objects.get(pk=3), 
-		to_adviser=True, to_ktto=True, to_rdco=True, notif_type=NotificationType.objects.get(pk=2), is_read=False, date_created=dt.now())
+		to_ktto=True, to_rdco=True, notif_type=NotificationType.objects.get(pk=2), is_read=False, date_created=dt.now())
 
 	notification.save()
 	messages.success(request, "Role Request to be an adviser sent")

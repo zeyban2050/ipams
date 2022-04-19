@@ -37,6 +37,9 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 User = get_user_model()
 from .tokens import activation_token
 
+from axes.models import AccessAttempt, AccessBase
+from axes.utils import reset
+
 #custom function to check the request type since Httpis_ajax(request=request) method is deprecated.
 def is_ajax(request):
     return request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
@@ -383,3 +386,18 @@ class SettingsView(View):
         else:
             print('invalid')
         return redirect('accounts-settings')
+
+
+@authorized_roles(roles=['adviser', 'ktto', 'rdco', 'itso', 'tbi'])
+def get_all_locked_accounts(request):
+    if request.method == 'POST':
+        accounts = AccessAttempt.objects.all()
+        data = []
+        for account in accounts:
+            data.append([
+                '',
+                account.attempt_time,
+                account.username,
+                account.failures_since_start
+            ])
+        return JsonResponse({'data': data})
