@@ -17,3 +17,5 @@ graphviz
 django-axes
 django-auto-logout
 six
+django-storages
+google-cloud-storage

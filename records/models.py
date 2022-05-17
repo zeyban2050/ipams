@@ -71,6 +71,10 @@ class Record(models.Model):
     abstract = RichTextField(blank=True, null=True)
     classification = models.ForeignKey(Classification, on_delete=models.DO_NOTHING)
     psced_classification = models.ForeignKey(PSCEDClassification, on_delete=models.DO_NOTHING)
+
+    abstract_filename = models.CharField(max_length=150, default='')
+    abstract_filesize = models.IntegerField(default=0)
+
     abstract_file = models.FileField(upload_to='abstract/', default='')
     is_ip = models.BooleanField(default=False)
     for_commercialization = models.BooleanField(default=False)
@@ -159,6 +163,9 @@ class RecordUploadStatus(models.Model):
 
 class RecordUpload(models.Model):
     file = models.FileField(upload_to='documents/', null=True, blank=True)
+
+    filename = models.CharField(max_length=150, default='')
+
     upload = models.ForeignKey(Upload, on_delete=models.CASCADE)
     record = models.ForeignKey(Record, on_delete=models.CASCADE)
     record_upload_status = models.ForeignKey(RecordUploadStatus, on_delete=models.CASCADE)

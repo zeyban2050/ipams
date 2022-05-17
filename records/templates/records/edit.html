@@ -113,6 +113,7 @@
 		});
 
 		$("#btn-record-submit").on("click",function(){
+			$('#loadIndicator').html('<div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>');
     		$.ajax({
 				headers: { "X-CSRFToken": '{{ csrf_token }}' },
 				data: new FormData($('#form-record').get(0)),
@@ -122,6 +123,7 @@
         		contentType: false,
 				type: "post",
 				success: function(data){
+					$('#loadIndicator').hide();
 					Swal.fire({
 					  title: 'Record Updated!',
 					  text: "The record has been successfully updated!",
@@ -137,6 +139,17 @@
 				}
 			});
 		});
+
+		$("#abstract-file").change(function () {
+	        var fileName = $(this).val();
+	        var file = '{{ filename }}';
+	        if(fileName != "") {
+	            $("#abstract-filename").html(file);
+	        } 
+	        else {
+	            $("#abstract-filename").html('');
+	        }
+	    });
 
 		$(document).ready(function(){
 			$(".btn-next").click(function(){
@@ -181,6 +194,15 @@
 				$("#collaboration-"+(count)+" > div:nth-child(3) > select > option:nth-child({{ collaboration.pk }})").prop("selected", true);
 				count++;
 			{% endfor %}
+
+
+			var file = '{{ filename }}';
+	        if($("#abstract-file").val() == "") {      
+                $("#abstract-filename").html(file);
+	        }
+	        else{
+				$("#abstract-filename").html('ay');
+	        }
 		});
 
 
@@ -279,6 +301,7 @@
 										<span aria-hidden="true">&times;</span>
 									</button>
 								</div>
+								<div id="loadIndicator"></div>
 								<div class="modal-footer">
 									<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
 									<button type="button" id="btn-record-submit" class="btn base-btn base-bg-primary">Save</button>

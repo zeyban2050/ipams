@@ -102,3 +102,51 @@ class CheckedRecordForm(forms.ModelForm):
 
 class AssessmentForm(forms.Form):
     comment = forms.CharField(required=False, label='COMMENTS / RECOMMENDATIONS', widget=forms.Textarea)
+
+
+
+
+
+
+class EditRecordForm(forms.ModelForm):
+    use_required_attribute = False
+    def __init__(self, *args, **kwargs):
+        super(EditRecordForm, self).__init__(*args, **kwargs)
+        self.fields['abstract_file'].required = False
+        
+    class Meta:
+        model = Record
+        fields = ('title', 'year_accomplished', 'abstract', 'classification', 'psced_classification', 'abstract_file', 'record_type')
+        # fields = ('title', 'year_accomplished', 'abstract', 'classification', 'psced_classification', 'record_type')
+
+    def save(self, commit=True):
+        title = self.cleaned_data.get('title')
+        year_accomplished = self.cleaned_data.get('year_accomplished')
+        classification = self.cleaned_data.get('classification')
+        psced_classification = self.cleaned_data.get('psced_classification')
+        abstract = self.cleaned_data.get('abstract', None)
+        record_len = len(Record.objects.filter(title=title, year_accomplished=year_accomplished, abstract=abstract,
+                                               classification=classification,
+                                               psced_classification=psced_classification))
+        if record_len == 0 or abstract is not None:
+            # # test encryption
+            # abstract_file = self.cleaned_data.get('abstract_file')
+            # if abstract_file is not None:
+            #     print("abstract_file is not None")
+            #     data = abstract_file.read()
+            #     data = bytearray(data)
+            #     for index, value in enumerate(data):
+            #         data[index] = value ^ 123
+            #     out = BytesIO()
+            #     out.write(data)
+            #     self.cleaned_data['abstract_file'] = File(out)
+            #     out.close()
+            # # end test of encryption
+            # else:
+            #     print("abstract_file is None")
+            #     self.cleaned_data['abstract_file'] = ''
+            m = super(EditRecordForm, self).save(commit=False)
+            if commit:
+                m.save()
+            return m
+        return None

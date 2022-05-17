@@ -142,13 +142,30 @@ USE_TZ = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 STATIC_URL = '/static/'
-MEDIA_URL = '/media/'
+# MEDIA_URL = '/media/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'staticfiles'),
 ]
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# for media store in the bucket
+# getting credential
+from google.oauth2 import service_account
+GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
+    os.path.join(BASE_DIR, 'credential.json'))
+
+#configuration for media file storing and retrieving media file from gcloud 
+DEFAULT_FILE_STORAGE ='ipams.gcloud.GoogleCloudMediaFileStorage'
+GS_PROJECT_ID = 'management-system-2'
+GS_BUCKET_NAME = 'ipams_bucket_1'
+MEDIA_ROOT = "media/"
+UPLOAD_ROOT = 'media/uploads/'
+MEDIA_URL = 'https://storage.googleapis.com/{}/'.format(GS_BUCKET_NAME)
+
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = 'credential.json'
+
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 LOGIN_REDIRECT_URL = '/'
@@ -179,9 +196,6 @@ GOOGLE_RECAPTCHA_SECRET_KEY = '6Lckj-EbAAAAAEKoK1quZBP62i5NY57NlqDko-kL'
 GOOGLE_RECAPTCHA_SITE_KEY = '6Lckj-EbAAAAAHKCPuWWZCsDMD48xYL8XYc0OPOt'
 TEST_FORM = True
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_USE_TLS = True
@@ -191,6 +205,9 @@ EMAIL_PORT = 587
 #     'smtp.gmail.com',
 #     'smtp-mail.outlook.com',
 #     'smtp.office365.com',
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 #     'smtp.mail.yahoo.com'
 # ]
 EMAIL_HOST_USER = 'ipamsdevteam22@gmail.com' 

@@ -23,11 +23,11 @@
                     {{ record.abstract|safe }}
                 </div>
             </div>
-            {% if record.abstract_file and user.role.id > 1 %}
+            {% if record.abstract_filename and user.role.id > 1 %}
             <div class="row">
                 <div class="col-12">
                     <a href="{% url 'records-download-abstract' record_id=record.pk %}">Download abstract</a>
-                    <label> size: {{ record.abstract_file.size|filesizeformat }}</label>
+                    <label> size: {{ record.abstract_filesize|filesizeformat }}</label>
                 </div>
             </div>
             {% endif %}
