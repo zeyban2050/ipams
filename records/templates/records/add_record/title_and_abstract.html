@@ -26,8 +26,11 @@
 	</div>
 </div>
 <div class="row">
-	<div class="col-12">
+	<div class="col">
 		{{ record_form.year_accomplished|as_crispy_field }}
+	</div>
+	<div class="col">
+		{{ record_form.year_completed|as_crispy_field }}
 	</div>
 </div>
 <div class="row">
@@ -35,7 +38,6 @@
 		{{ record_form.abstract|as_crispy_field }}
 	</div>
 </div>
-
 <div class="row">
 	<div class="col-12">
 		{{ record_form.abstract_file|as_crispy_field }}

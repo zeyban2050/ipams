@@ -14,7 +14,7 @@ from django.shortcuts import redirect
 from ipams import settings
 from . import forms
 from .decorators import authorized_roles
-from .models import User, UserRole, RoleRequest, Course, Student, Log, Setting
+from .models import User, UserRole, RoleRequest, Course, Student, Log, Setting, College, Department, Adviser
 from records.models import CheckedRecord, Record
 from notifications.models import Notification, NotificationType
 from accounts.auxfunctions import roleRequestStudent, roleRequestAdviser
@@ -87,6 +87,16 @@ class SignupView(View):
                 for course in Course.objects.all():
                     courses.append({'value': course.name, 'id': course.pk})
                 return JsonResponse({'courses': courses})
+            elif request.POST.get("get_colleges", 'false') == 'true':
+                colleges = []
+                for college in College.objects.all():
+                    colleges.append({'value': college.name, 'id': college.pk})
+                return JsonResponse({'colleges': colleges})
+            elif request.POST.get("get_departments", 'false') == 'true':
+                departments = []
+                for department in Department.objects.all():
+                    departments.append({'value': department.name, 'id': department.pk, 'college': department.college.name})
+                return JsonResponse({'departments': departments})
             else:
                 return JsonResponse({'success': 'false'})
         else:
@@ -107,6 +117,10 @@ class SignupView(View):
                         Student(user=user, course=Course.objects.get(pk=int(course[0]['id']))).save()
                         roleRequestStudent(request, user.id, Course.objects.only('name').get(pk=int(course[0]['id'])).name)
                     elif request.POST.get('role', '0') == '3':
+                        college = json.loads(request.POST.get('college'))
+                        department = json.loads(request.POST.get('department'))
+                        Adviser(user=user, department=Department.objects.get(pk=int(department[0]['id'])), 
+                            college=College.objects.get(pk=int(college[0]['id']))).save()
                         roleRequestAdviser(request, user.id)
                     RoleRequest(user=user, role=UserRole.objects.get(pk=int(request.POST.get('role', 0)))).save()
                     

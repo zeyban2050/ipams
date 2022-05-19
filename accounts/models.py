@@ -65,7 +65,7 @@ class Department(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 
 
-class Course(models.Model):
+class Course(models.Model): #Program
 	name = models.CharField(max_length=100, unique=True)
 	department = models.ForeignKey(Department, on_delete=models.CASCADE)
 	date_created = models.DateTimeField(auto_now_add=True)
@@ -73,7 +73,7 @@ class Course(models.Model):
 
 class Student(models.Model):
 	user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, default=None)
-	course = models.ForeignKey(Course, on_delete=models.DO_NOTHING, null=True, blank=True)
+	course = models.ForeignKey(Course, on_delete=models.DO_NOTHING, null=True, blank=True) #program
 	date_created = models.DateTimeField(auto_now_add=True)
 
 
@@ -105,3 +105,8 @@ class Setting(models.Model):
 	date_updated = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
 
+class Adviser(models.Model):
+	user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, default=None)
+	department = models.ForeignKey(Department, on_delete=models.CASCADE)
+	college = models.ForeignKey(College, on_delete=models.CASCADE)
+	date_created = models.DateTimeField(auto_now_add=True)

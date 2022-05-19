@@ -25,14 +25,69 @@ $(document).ready(function() {
             }
         });
 
+        $.ajax({
+            headers: { "X-CSRFToken": '{{ csrf_token }}' },
+            data: {"get_colleges": "true"},
+            dataType:"json",
+            type: "post",
+            success: function(data){
+                var colleges = data["colleges"];
+                var collegeInput = $("#college")[0];
+                new Tagify(collegeInput, {
+                    enforceWhitelist:true,
+                    whitelist: colleges,
+                    dropdown:{enabled:1},
+                    maxTags: 1
+                });
+            },
+            error: function(data){
+                alert("error");
+            }
+        });
+
+        $.ajax({
+            headers: { "X-CSRFToken": '{{ csrf_token }}' },
+            data: {"get_departments": "true"},
+            dataType:"json",
+            type: "post",
+            success: function(data){
+                var departments = data["departments"];
+                var departmentInput = $("#department")[0];
+                new Tagify(departmentInput, {
+                    enforceWhitelist:true,
+                    whitelist: departments,
+                    dropdown:{enabled:1},
+                    maxTags: 1
+                });
+                // var input = document.querySelector('input[name=college]');
+                // var collegeTagify = new Tagify(input);
+                // var college = data["departments"]['college'];
+                // console.log(college);
+                // var tags = [];
+                // tags.push(college);
+                // console.log(tags);
+                // collegeTagify.addTags(tags);
+            },
+            error: function(data){
+                alert("error");
+            }
+        });
+
+
         $("#role1").on("click", function(){
             $("#courses").hide();
+            $("#colleges").hide();
+            $("#departments").hide();
         });
         $("#role2").on("click", function(){
             $("#courses").show();
+            $("#colleges").hide();
+            $("#departments").hide();
         });
         $("#role3").on("click", function(){
             $("#courses").hide();
+            $("#colleges").show();
+            $("#departments").show();
         });
 });
 
@@ -76,7 +131,23 @@ $(document).ready(function() {
                 <div class="row" style="margin-top: 20px;">
                     <div class="col-12">
                         <div id="courses" style="display:none;">
-                            <label>Course:</label> <input placeholder="search course" type="text" class="form-control" id="course" name="course">
+                            <label>Program</label> <input placeholder="search course" type="text" class="form-control" id="course" name="course">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row" style="margin-top: 20px;">
+                    <div class="col-12">
+                        <div id="colleges" style="display:none;">
+                            <label>College</label> <input placeholder="search college" type="text" class="form-control" id="college" name="college">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row" style="margin-top: 20px;">
+                    <div class="col-12">
+                        <div id="departments" style="display:none;">
+                            <label>Department</label> <input placeholder="search department" type="text" class="form-control" id="department" name="department">
                         </div>
                     </div>
                 </div>

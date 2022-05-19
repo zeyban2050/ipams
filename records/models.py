@@ -1,5 +1,7 @@
 from django.db import models
 from ckeditor.fields import RichTextField
+import datetime 
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 class Classification(models.Model):
     name = models.CharField(max_length=100)
@@ -67,15 +69,14 @@ class RecordType(models.Model):
 
 class Record(models.Model):
     title = models.CharField(max_length=100)
-    year_accomplished = models.CharField(max_length=30)
-    abstract = RichTextField(blank=True, null=True)
+    year_accomplished = models.CharField(max_length=30) #Year Started
+    year_completed = models.CharField(max_length=30, null=True, blank=True)
+    abstract = RichTextField()
     classification = models.ForeignKey(Classification, on_delete=models.DO_NOTHING)
     psced_classification = models.ForeignKey(PSCEDClassification, on_delete=models.DO_NOTHING)
-
-    abstract_filename = models.CharField(max_length=150, default='')
-    abstract_filesize = models.IntegerField(default=0)
-
-    abstract_file = models.FileField(upload_to='abstract/', default='')
+    abstract_filename = models.CharField(max_length=150, default='', null=True, blank=True)
+    abstract_filesize = models.IntegerField(default=0, null=True, blank=True)
+    abstract_file = models.FileField(upload_to='abstract/', default='', null=True, blank=True)
     is_ip = models.BooleanField(default=False)
     for_commercialization = models.BooleanField(default=False)
     community_extension = models.BooleanField(default=False)

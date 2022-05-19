@@ -966,7 +966,7 @@ class Add(View):
                 for user in User.objects.filter(role__in=[3, 4, 5]):
                     advisers.append({'value': user.username, 'id': user.pk})
                 return JsonResponse({'users': users, 'advisers': advisers})
-
+            
         ''' reCAPTCHA validation '''
         recaptcha_response = request.POST.get('g-recaptcha-response')
         data = {
@@ -994,10 +994,13 @@ class Add(View):
                 if request.user.role.pk == 2:
                     student = Student.objects.get(user=request.user)
                 record.representative = f'{request.user.first_name} {request.user.last_name}'
-                record.abstract_filesize = record.abstract_file.size
-                record.abstract_filename = record.abstract_file.name
-                upload_blob(settings.GS_BUCKET_NAME, record.abstract_file, record.abstract_file.name)
-                record.abstract_file = None
+
+                if file is not None:
+                    record.abstract_filesize = record.abstract_file.size
+                    record.abstract_filename = record.abstract_file.name
+                    upload_blob(settings.GS_BUCKET_NAME, record.abstract_file, record.abstract_file.name)
+                    record.abstract_file = None
+
                 record.save()
                 if request.user.role.pk == 2:
                     year = str(datetime.datetime.now().year)[2:]
@@ -1063,6 +1066,7 @@ class Add(View):
             else:
                 messages.error(request, 'A record with the same record information already exists')
         else:
+            print(record_form.errors)
             messages.error(request, 'You must fill-in all the required fields')
 
 
@@ -1135,10 +1139,13 @@ class AddResearch(View):
                 adviser = json.loads(request.POST.get('adviser-id'))
                 record.adviser = User.objects.get(pk=adviser[0]['id'])
                 record.record_type = RecordType.objects.get(pk=2)
-                record.abstract_filesize = record.abstract_file.size
-                record.abstract_filename = record.abstract_file.name
-                upload_blob(settings.GS_BUCKET_NAME, record.abstract_file, record.abstract_file.name)
-                record.abstract_file = None
+
+                if file is not None:
+                    record.abstract_filesize = record.abstract_file.size
+                    record.abstract_filename = record.abstract_file.name
+                    upload_blob(settings.GS_BUCKET_NAME, record.abstract_file, record.abstract_file.name)
+                    record.abstract_file = None
+
                 record.save()
                 research_record = ResearchRecord.objects.get(pk=research_record_id)
                 research_record.research = record
