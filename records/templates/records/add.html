@@ -138,29 +138,54 @@
 
 	$("#btn-record-submit").on("click",function(){
 		// adviser input field must not be empty before submitting a record
-		var adviserInput = $('#adviser-id').val();
-		if(adviserInput == ''){
-			Swal.fire(
-				'Adviser is Empty',
-				'Kindly indicate the name of the adviser/s.',
+		var reqlength = $('.adviser_uploads').length;
+	    console.log(reqlength);
+	    var value = $('.adviser_uploads').filter(function () {
+	        return this.value != '';
+	    });
+
+	    if (value.length>=0 && (value.length !== reqlength)) {
+	    	console.log(value.length);
+	    	$(".adviser_uploads").each(function () {
+		    	if ($(this).val() == ''){
+		        	$(this).css('border', "red solid 1px");
+		    	}else{
+		    		$(this).css('border', '');
+		    	}
+		    });
+	        Swal.fire(
+				'Empty Upload Field',
+				'Please fill out all required upload fields.',
 				'warning'
 	 		)
+	 		$('#record-submit-modal').modal('toggle');
 	 		return false;
-		}
-		else{
-			var valid = false;
-			year_max = new Date().getFullYear()+1;
-			if($("#id_year_accomplished").val()!=""){
-				year_accomplished = parseInt($("#id_year_accomplished").val(), 10);
-				if(year_accomplished>0 && year_accomplished<=year_max)
-					valid = true;
+	    }
+	    else{
+			var adviserInput = $('#adviser-id').val();
+			if(adviserInput == ''){
+				Swal.fire(
+					'Adviser is Empty',
+					'Kindly indicate the name of the adviser/s.',
+					'warning'
+		 		)
+		 		return false;
 			}
-			else
-				valid = true;
-			if(valid)
-				$("#form-record").submit();
-			else
-				alert("Unable to save this record, check that all fields are valid values");
+			else{
+				var valid = false;
+				year_max = new Date().getFullYear()+1;
+				if($("#id_year_accomplished").val()!=""){
+					year_accomplished = parseInt($("#id_year_accomplished").val(), 10);
+					if(year_accomplished>0 && year_accomplished<=year_max)
+						valid = true;
+				}
+				else
+					valid = true;
+				if(valid)
+					$("#form-record").submit();
+				else
+					alert("Unable to save this record, check that all fields are valid values");
+			}
 		}
 	});
 
@@ -169,6 +194,9 @@
 			$("#reminder"+i).html('<h6 style="margin-top: 30px">Note: Click Next to Skip.</h6>');
 		}
 		$(".uReminder").html('<h6 style="margin-top: 30px">Note: Click Confirm to Skip.</h6>');
+
+		document.getElementsByClassName("adviser_uploads").required = true;
+
 		$(".btn-next").click(function(){
 			$(".nav-tabs > .active").next(".nav-item").trigger("click");
 		});

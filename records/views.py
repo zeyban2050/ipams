@@ -183,14 +183,26 @@ class Home(View):
                 roleRequestApproved(request, request.user.id, user.id)
             # setting datatable records
             for record in records:
-                data.append([
-                    record.pk,
-                    '<a href="/record/' + str(
-                    record.pk) + '">' + record.title + '</a>',
-                    record.year_accomplished,
-                    record.classification.name,
-                    record.psced_classification.name
-                ])
+                if request.user.role.pk > 2:
+                    data.append([
+                        record.pk,
+                        '<a href="/record/' + str(
+                        record.pk) + '">' + record.title + '</a>',
+                        record.year_accomplished,
+                        record.year_completed,
+                        record.classification.name,
+                        record.psced_classification.name
+                    ])
+                else:
+                    data.append([
+                        record.pk,
+                        '<a href="/record/' + str(
+                        record.pk) + '">' + record.title + '</a>',
+                        record.year_accomplished,
+                        record.classification.name,
+                        record.psced_classification.name
+                    ])
+
             return JsonResponse({"data": data})
 
 

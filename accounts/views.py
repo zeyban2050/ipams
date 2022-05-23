@@ -180,35 +180,6 @@ def activate(request, uidb64, token):
         messages.error(request, 'Activation link is invalid!')
     return redirect('records-index')
 
-# def login_user(request):
-#     if request.method == 'POST':
-#         ''' reCAPTCHA validation '''
-#         recaptcha_response = request.POST.get('g-recaptcha-response')
-#         data = {
-#             'secret': settings.GOOGLE_RECAPTCHA_SECRET_KEY,
-#             'response': recaptcha_response
-#         }
-#         r = requests.post('https://www.google.com/recaptcha/api/siteverify', data=data)
-#         result = r.json()
-#         ''' End reCAPTCHA validation '''
-
-#         if result['success'] or settings.TEST_FORM:
-#             form = forms.LoginForm(request.POST)
-#             if form.is_valid():
-#                 username = form.cleaned_data.get('username')
-#                 password = form.cleaned_data.get('password')
-#                 user = authenticate(username=username, password=password)
-#                 if user:
-#                     login(request, user)
-#                     messages.success(request, f'Welcome {username}')
-#                     if request.POST.get('next'):
-#                         return redirect(request.POST.get('next'))
-#                 else:
-#                     messages.error(request, 'Invalid Username/Password')
-#         else:
-#             messages.error(request, 'Recaptcha is required')
-#     return redirect('records-index')
-
 @method_decorator(axes_dispatch, name='dispatch')
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginView(View):
@@ -264,13 +235,6 @@ class LoginView(View):
                         else:
                             messages.error(request, 'Account is not activated yet. Please check your email address to verify.')
                     else:
-                        # signals.user_login_failed.send(
-                        #     sender=User,
-                        #     request=request,
-                        #     credentials={
-                        #         'username': form.cleaned_data.get('username'),
-                        #     },
-                        # )
                         messages.error(request, 'Invalid Username/Password')
             else:
                 messages.error(request, 'Recaptcha is required')
@@ -346,24 +310,15 @@ def get_pending_count(request):
     if request.method == 'POST':
         if request.user.role.id == 3:
             adviser_exclude = CheckedRecord.objects.select_related('record').all()
-            rows = Record.objects.filter(adviser=request.user.pk).exclude(pk__in=Subquery(adviser_exclude.values('record').distinct())).values('pk', 'title')   
-            # with connection.cursor() as cursor:
-            #     cursor.execute(f"select records_record.id, records_record.title, records_checkedrecord.checked_by_id from records_record left join records_checkedrecord on records_record.id = records_checkedrecord.record_id where checked_by_id is null and records_record.adviser_id = {request.user.pk}")
-            #     rows = cursor.fetchall()               
+            rows = Record.objects.filter(adviser=request.user.pk).exclude(pk__in=Subquery(adviser_exclude.values('record').distinct())).values('pk', 'title')                
         elif request.user.role.id == 4 or request.user.role.id == 7:
             ktto_exclude = CheckedRecord.objects.select_related('record').filter(Q(checked_by__in=Subquery(User.objects.filter(role=4).values('pk'))) | Q(checked_by__in=Subquery(User.objects.filter(role=7).values('pk'))))
             ktto_include = CheckedRecord.objects.select_related('record').filter(status='approved', checked_by__in=Subquery(User.objects.filter(role=3).values('pk')))
             rows = Record.objects.filter(pk__in=Subquery(ktto_include.values('record'))).exclude(pk__in=Subquery(ktto_exclude.values('record'))).values('pk', 'title')
-            # with connection.cursor() as cursor:
-            #     cursor.execute("SELECT records_record.id, records_record.title FROM records_record INNER JOIN records_checkedrecord ON records_record.id = records_checkedrecord.record_id INNER JOIN accounts_user ON records_checkedrecord.checked_by_id = accounts_user.id WHERE accounts_user.role_id = 3 AND records_checkedrecord.status = 'approved' AND records_record.id NOT IN (SELECT records_checkedrecord.record_id FROM records_checkedrecord INNER JOIN accounts_user ON records_checkedrecord.checked_by_id = accounts_user.id WHERE accounts_user.role_id = 4 or accounts_user.role_id = 7)")
-            #     rows = cursor.fetchall()
         elif request.user.role.id == 5:
             rdco_exclude = CheckedRecord.objects.select_related('record').filter(checked_by__in=Subquery(User.objects.filter(role=5).values('pk')))
             rdco_include = CheckedRecord.objects.select_related('record').filter(Q(checked_by__in=Subquery(User.objects.filter(role=4).values('pk'))) | Q(checked_by__in=Subquery(User.objects.filter(role=7).values('pk'))), status='approved')
             rows = Record.objects.filter(pk__in=Subquery(rdco_include.values('record'))).exclude(pk__in=Subquery(rdco_exclude.values('record'))).values('pk','title')
-            # with connection.cursor() as cursor:
-            #     cursor.execute("SELECT records_record.id, records_record.title FROM records_record INNER JOIN records_checkedrecord ON records_record.id = records_checkedrecord.record_id INNER JOIN accounts_user ON records_checkedrecord.checked_by_id = accounts_user.id WHERE (accounts_user.role_id = 4 OR accounts_user.role_id = 7) AND records_checkedrecord.status = 'approved' AND records_record.id NOT IN (SELECT records_checkedrecord.record_id FROM records_checkedrecord INNER JOIN accounts_user ON records_checkedrecord.checked_by_id = accounts_user.id WHERE accounts_user.role_id = 5)")
-            #     rows = cursor.fetchall()
         return JsonResponse({"pending-count": len(rows)})
 
 

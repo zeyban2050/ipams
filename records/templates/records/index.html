@@ -27,31 +27,59 @@
 		};
 
 		function initRecordsTbl(){
-			if(recordsTbl){
-				recordsTbl.clear().destroy();
-			}
-			recordsTbl = $('#tbl-records').DataTable({
-				"ajax":	{
-					headers: { "X-CSRFToken": '{{ csrf_token }}' },
-					url: "{% url 'records-index' %}",
-					data: filters, 
-					dataType:"json",
-					type: "post",
-				},
-				// When deferred rendering is enabled, rather than having DataTables create all TR and TD nodes required for the table when the data is loaded, DataTables will only create the nodes required for each individual row at the time of that row being drawn on the page (these nodes are then retained in case they are needed again so they aren't created multiple times). This can give a significant performance increase, since a lot less work is done at initialisation time.
-	    		"deferRender": true,
-				"scrollX": true,
-				"responsive": true,
-				"order": [[ 2, "desc" ], [ 1, "asc" ]],
-
-				"columnDefs": [
-					{
-						"targets": [ 0 ],
-						"visible": false,
-						"searchable": false
+			{% if user.role.id > 2 %}
+				if(recordsTbl){
+					recordsTbl.clear().destroy();
+				}
+				recordsTbl = $('#tbl-records').DataTable({
+					"ajax":	{
+						headers: { "X-CSRFToken": '{{ csrf_token }}' },
+						url: "{% url 'records-index' %}",
+						data: filters, 
+						dataType:"json",
+						type: "post",
 					},
-				],
-			});
+					// When deferred rendering is enabled, rather than having DataTables create all TR and TD nodes required for the table when the data is loaded, DataTables will only create the nodes required for each individual row at the time of that row being drawn on the page (these nodes are then retained in case they are needed again so they aren't created multiple times). This can give a significant performance increase, since a lot less work is done at initialisation time.
+		    		"deferRender": true,
+					"scrollX": true,
+					"responsive": true,
+					"order": [[ 2, "desc" ], [ 1, "asc" ]],
+					"columnDefs": [
+						{
+							"targets": [ 0 ],
+							"visible": false,
+							"searchable": false
+						},
+						{ "width": "13%", "targets": 2 }, // Set the third column's width to 13% with columnDefs
+						{ "width": "13%", "targets": 3 }, // Set the fourth column's width to 13% with columnDefs
+					],
+				});
+			{% else %}
+				if(recordsTbl){
+					recordsTbl.clear().destroy();
+				}
+				recordsTbl = $('#tbl-records').DataTable({
+					"ajax":	{
+						headers: { "X-CSRFToken": '{{ csrf_token }}' },
+						url: "{% url 'records-index' %}",
+						data: filters, 
+						dataType:"json",
+						type: "post",
+					},
+					// When deferred rendering is enabled, rather than having DataTables create all TR and TD nodes required for the table when the data is loaded, DataTables will only create the nodes required for each individual row at the time of that row being drawn on the page (these nodes are then retained in case they are needed again so they aren't created multiple times). This can give a significant performance increase, since a lot less work is done at initialisation time.
+		    		"deferRender": true,
+					"scrollX": true,
+					"responsive": true,
+					"order": [[ 2, "desc" ], [ 1, "asc" ]],
+					"columnDefs": [
+						{
+							"targets": [ 0 ],
+							"visible": false,
+							"searchable": false
+						},
+					],
+				});
+			{% endif %}
 		}
 
 		function initAccountsTbl(){
@@ -360,7 +388,10 @@
 						            <tr>
 										<th>ID</th>
 						                <th>RESEARCH TITLE</th>
-						                <th>YEAR</th>
+						                <th>YEAR STARTED</th>
+						                {% if user.role.id > 2 %}
+						                	<th>YEAR COMPLETED</th>
+						                {% endif %}
 						                <th>CLASS</th>
 						                <th>PSCED</th>
 						            </tr>

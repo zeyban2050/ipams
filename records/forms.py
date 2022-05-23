@@ -129,22 +129,6 @@ class EditRecordForm(forms.ModelForm):
                                                classification=classification,
                                                psced_classification=psced_classification))
         if record_len == 0 or abstract is not None:
-            # # test encryption
-            # abstract_file = self.cleaned_data.get('abstract_file')
-            # if abstract_file is not None:
-            #     print("abstract_file is not None")
-            #     data = abstract_file.read()
-            #     data = bytearray(data)
-            #     for index, value in enumerate(data):
-            #         data[index] = value ^ 123
-            #     out = BytesIO()
-            #     out.write(data)
-            #     self.cleaned_data['abstract_file'] = File(out)
-            #     out.close()
-            # # end test of encryption
-            # else:
-            #     print("abstract_file is None")
-            #     self.cleaned_data['abstract_file'] = ''
             m = super(EditRecordForm, self).save(commit=False)
             if commit:
                 m.save()
