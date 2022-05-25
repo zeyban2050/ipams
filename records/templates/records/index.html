@@ -15,9 +15,13 @@
 		var filters = {
 			"year_from":"{{ year_from }}",
 			"year_to":"{{ year_to }}",
+			"ip_cb":"",
+			"commercialization_cb":"",
+			"community_cb":"",
 			"classification":"",
 			"psced_classification":"",
 			"author":"",
+			"department":"",
 			"conference":"",
 			"publication":"",
 			"budget_min":"",
@@ -132,9 +136,13 @@
 			filters = {
 				"year_from":"",
 				"year_to":"",
+				"ip_cb":"",
+				"commercialization_cb":"",
+				"community_cb":"",
 				"classification":"",
 				"psced_classification":"",
 				"author":"",
+				"department":"",
 				"conference":"",
 				"publication":"",
 				"budget_min":"",
@@ -147,12 +155,28 @@
 				filters['year_to']= $("#year_to").val();
 				$("#filter-tags").append('<div class="badge badge-success">Year='+filters['year_from']+' - '+filters['year_to']+'</div>&nbsp;');
 			}
+			if($("#ip_cb").is(":checked")){
+				console.log($("#ip_cb").val());
+				filters['ip_cb'] = $("#intellectual_property").text();
+				$("#filter-tags").append('<div class="badge badge-success">Tags='+filters['ip_cb']+'</div>&nbsp;');
+			}
+			if($("#commercialization_cb").is(":checked")){
+				filters['commercialization_cb'] = $("#commercialization").text();
+				$("#filter-tags").append('<div class="badge badge-success">Tags='+filters['commercialization_cb']+'</div>&nbsp;');
+			}
+			if($("#community_cb").is(":checked")){
+				filters['community_cb'] = $("#community_extension").text();
+				$("#filter-tags").append('<div class="badge badge-success">Tags='+filters['community_cb']+'</div>&nbsp;');
+			}
 			filters['classification']=$("#id_classification").val();
 			if(filters['classification']!='')
 				$("#filter-tags").append('<div class="badge badge-success">Classification='+$("#id_classification option:selected").html()+'</div>&nbsp;');
 			filters['psced_classification']=$("#id_psced_classification").val();
 			if(filters['psced_classification']!='')
 				$("#filter-tags").append('<div class="badge badge-success">PSCED Classification='+$("#id_psced_classification option:selected").html()+'</div>&nbsp;');
+			filters['department']=$("#department").val();
+			if(filters['department']!='')
+				$("#filter-tags").append('<div class="badge badge-success">Department='+filters['department']+'</div>&nbsp;');
 			if($("#author_cb").is(":checked")){
 				filters["author"]=$("#author").val();
 				$("#filter-tags").append('<div class="badge badge-success">Author='+filters['author']+'</div>&nbsp;');
@@ -394,6 +418,7 @@
 						                {% endif %}
 						                <th>CLASS</th>
 						                <th>PSCED</th>
+						                <!-- <th>AUTHOR</th> -->
 						            </tr>
 						        </thead>
 						        <tbody>
@@ -456,8 +481,7 @@
 							<h1>How to migrate data from spreadsheet?</h1>
 							<ol>
 								<li>Follow the data entry format which can be viewed <a href="{% url 'records-download-format' %}">HERE</a>.</li>
-								<li>When adding a new entry to a section, simply duplicate the record row and replace the existing
-section with the new entry.</li>
+								<li>When adding a new entry to a section, simply duplicate the record row and replace the existing section with the new entry.</li>
 								<li>The migration stops when they read a merged cell that contains END OF RECORDS.</li>
 								<li>After the format is thoroughly followed, Press GENERATE to add the records.</li>
 							</ol>
@@ -516,6 +540,32 @@ section with the new entry.</li>
 							<input class="form-control" placeholder="to" id="year_to" name="year_to" value="{{ year_to }}">
 						</div>
 					</div>
+					<div class="row" style="margin-bottom: 10px; margin-top: 10px;">
+						<div class="col-sm">
+							<div class="form-check">
+							  <input class="form-check-input" type="checkbox" id="ip_cb" name="ip_cb">
+							  <label class="form-check-label" for="ip_cb">
+								<span id="intellectual_property"> Intellectual Property </span>
+							  </label>
+							</div>
+						</div>
+						<div class="col-auto">
+							<div class="form-check">
+							  <input class="form-check-input" type="checkbox" id="commercialization_cb" name="commercialization_cb">
+							  <label class="form-check-label" for="commercialization_cb">
+							    <span id="commercialization"> Commercialization </span> 
+							  </label>
+							</div>
+						</div>
+						<div class="col-sm">
+							<div class="form-check">
+							  <input class="form-check-input" type="checkbox" id="community_cb" name="community_cb">
+							  <label class="form-check-label" for="community_cb">
+							    <span id="community_extension"> Community Extension </span>
+							  </label>
+							</div>
+						</div>
+					</div>
 					<div class="row">
 						<div class="col-lg-12">
 							{{ record_form.classification|as_crispy_field }}
@@ -526,7 +576,18 @@ section with the new entry.</li>
 							{{ record_form.psced_classification|as_crispy_field }}
 						</div>
 					</div>
-					<div class="row" style="margin-top:10px">
+					<div class="row" style="margin-bottom: 10px;">
+						<div class="col-lg-12">
+							<label class="form-check-label" for="department_cb"> Department </label>
+							<select class="form-control" id="department" name="department">
+								<option value="">------</option>
+							{% for department in departments %}
+								<option value="{{ department.name }}">{{ department.name }}</option>
+							{% endfor %}
+						    </select>
+						</div>
+					</div>
+					<div class="row" style="margin-top:15px;">
 						<div class="col-lg-5">
 							<div class="form-check">
 							  <input class="form-check-input" type="checkbox" id="author_cb">
@@ -539,7 +600,7 @@ section with the new entry.</li>
 							<input class="form-control" id="author" name="author">
 						</div>
 					</div>
-			  		<div class="row" style="margin-top:10px">
+			  		<div class="row" style="margin-top:10px;">
 						<div class="col-lg-5">
 							<div class="form-check">
 							  <input class="form-check-input" type="checkbox" id="conference_cb">
@@ -552,7 +613,7 @@ section with the new entry.</li>
 							<input class="form-control" id="conference" name="conference">
 						</div>
 					</div>
-					<div class="row" style="margin-top:10px">
+					<div class="row" style="margin-top:10px;">
 						<div class="col-lg-5">
 							<div class="form-check">
 							  <input class="form-check-input" type="checkbox" name="publication_cb" id="publication_cb">
@@ -565,7 +626,7 @@ section with the new entry.</li>
 							<input class="form-control" id="publication" name="publication">
 						</div>
 					</div>
-					<div class="row" style="margin-top:10px">
+					<div class="row" style="margin-top:10px;">
 						<div class="col-lg-5">
 							<div class="form-check">
 							  <input class="form-check-input" type="checkbox" id="budget_cb">
@@ -581,7 +642,7 @@ section with the new entry.</li>
 							<input class="form-control" placeholder="max" id="budget_max" name="budget_max">
 						</div>
 					</div>
-					<div class="row" style="margin-top:10px">
+					<div class="row" style="margin-top:10px;">
 						<div class="col-lg-5">
 							<div class="form-check">
 							  <input class="form-check-input" type="checkbox" id="collaborator_cb">

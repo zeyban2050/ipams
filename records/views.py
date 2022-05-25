@@ -12,7 +12,7 @@ from django.views import View
 from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 
 from accounts.decorators import authorized_roles, authorized_record_user
-from accounts.models import User, UserRole, UserRecord, RoleRequest, Log, Student, Setting
+from accounts.models import User, UserRole, UserRecord, RoleRequest, Log, Student, Setting, Department, Adviser
 from ipams import settings
 from .forms import CheckedRecordForm
 from .models import Record, AuthorRole, Classification, PSCEDClassification, ConferenceLevel, BudgetType, \
@@ -92,6 +92,9 @@ class Home(View):
     def get(self, request):
         login_required = request.GET.get('next', False)
         user_roles = UserRole.objects.all()
+
+        departments = Department.objects.all()
+
         logs = request.session.get('logs', '')
         context = {
             'login_required': login_required,
@@ -104,6 +107,8 @@ class Home(View):
             'year_from': datetime.datetime.now().year,
             'year_to': datetime.datetime.now().year,
             'landing_page': Setting.objects.get(name='landing_page'),
+
+            'departments': departments,
         }
         if logs != '':
             del request.session['logs']
@@ -138,13 +143,40 @@ class Home(View):
                 budget_min_filter = request.POST.get('budget_min')
                 budget_max_filter = request.POST.get('budget_max')
                 collaborator_filter = request.POST.get('collaborator')
+                department_filter = request.POST['department']
+
+                ip_filter = request.POST.get('ip_cb')
+                print(ip_filter)
+                commercialization_filter = request.POST.get('commercialization_cb')
+                print(commercialization_filter)
+                community_filter = request.POST.get('community_cb')
+                print(community_filter)
+
+
                 if year_from_filter != '' or year_to_filter != '':
-                    records = records.filter(year_accomplished__gte=year_from_filter)\
-                        .filter(year_accomplished__lte=year_to_filter)
+                    records = records.filter(year_accomplished__gte=year_from_filter).filter(year_accomplished__lte=year_to_filter)
+                
+                if ip_filter != '' and commercialization_filter == '' and community_filter == '':
+                    records = records.filter(is_ip=True)
+                if ip_filter != '' and commercialization_filter != '' and community_filter == '':
+                    records = records.filter(Q(is_ip=True) & Q(for_commercialization=True))
+                if ip_filter != '' and commercialization_filter == '' and community_filter != '':
+                    records = records.filter(Q(is_ip=True) & Q(community_extension=True))
+                if commercialization_filter != '' and ip_filter == '' and community_filter == '':
+                    records = records.filter(for_commercialization=True)
+                if commercialization_filter != '' and ip_filter == '' and community_filter != '':
+                    records = records.filter(Q(for_commercialization=True) & Q(community_extension=True))
+                if community_filter != '' and commercialization_filter == '' and ip_filter == '':
+                    records = records.filter(community_extension=True)
+                if ip_filter != '' and commercialization_filter != '' and community_filter != '':
+                    records = records.filter(Q(is_ip=True) & Q(for_commercialization=True) & Q(community_extension=True))
+                
                 if classification_filter != '':
                     records = records.filter(classification=classification_filter)
                 if psced_classification_filter != '':
                     records = records.filter(psced_classification=psced_classification_filter)
+                if department_filter != '':
+                    records = records.filter(pk__in=Subquery(UserRecord.objects.filter(Q(user__in=Subquery(Student.objects.filter(course__in=Subquery(Course.objects.filter(department__in=Subquery(Department.objects.filter(name=department_filter).values('pk'))).values('pk'))).values('pk'))) | Q(user__in=Subquery(Adviser.objects.filter(department__in=Subquery(Department.objects.filter(name=department_filter).values('pk'))).values('pk')))).values('record')))
                 if author_filter != '':
                     records = records.filter(pk__in=Author.objects.filter(name__contains=author_filter).values('record_id'))
                 if conference_filter != '':
@@ -183,25 +215,35 @@ class Home(View):
                 roleRequestApproved(request, request.user.id, user.id)
             # setting datatable records
             for record in records:
-                if request.user.role.pk > 2:
+                if request.user.is_anonymous:
                     data.append([
                         record.pk,
                         '<a href="/record/' + str(
                         record.pk) + '">' + record.title + '</a>',
                         record.year_accomplished,
-                        record.year_completed,
                         record.classification.name,
                         record.psced_classification.name
                     ])
                 else:
-                    data.append([
-                        record.pk,
-                        '<a href="/record/' + str(
-                        record.pk) + '">' + record.title + '</a>',
-                        record.year_accomplished,
-                        record.classification.name,
-                        record.psced_classification.name
-                    ])
+                    if request.user.role.pk > 2:
+                        data.append([
+                            record.pk,
+                            '<a href="/record/' + str(
+                            record.pk) + '">' + record.title + '</a>',
+                            record.year_accomplished,
+                            record.year_completed,
+                            record.classification.name,
+                            record.psced_classification.name
+                        ])
+                    else:
+                        data.append([
+                            record.pk,
+                            '<a href="/record/' + str(
+                            record.pk) + '">' + record.title + '</a>',
+                            record.year_accomplished,
+                            record.classification.name,
+                            record.psced_classification.name
+                        ])
 
             return JsonResponse({"data": data})
 
@@ -1618,17 +1660,6 @@ class PendingRecordsView(View):
                     row[0],
                     '<a href="/record/pending/' + str(row[0]) + '">' + row[1] + '</a>',
                 ])
-            # with connection.cursor() as cursor:
-            #     cursor.execute(f"select records_record.id, records_record.title, records_checkedrecord.checked_by_id from records_record left join records_checkedrecord on records_record.id = records_checkedrecord.record_id where checked_by_id is null and records_record.adviser_id = {request.user.pk}")
-            #     rows = cursor.fetchall()
-            #     print('Rows')
-            #     print(rows)
-            # data = []
-            # for row in rows:
-            #     data.append([
-            #         row[0],
-            #         '<a href="/record/pending/' + str(row[0]) + '">' + row[1] + '</a>',
-            #     ])
         elif request.user.role.id == 4 or request.user.role.id == 7:
             ktto_exclude = CheckedRecord.objects.select_related('record').filter(Q(checked_by__in=Subquery(User.objects.filter(role=4).values('pk'))) | Q(checked_by__in=Subquery(User.objects.filter(role=7).values('pk'))))
             ktto_include = CheckedRecord.objects.select_related('record').filter(status='approved', checked_by__in=Subquery(User.objects.filter(role=3).values('pk')))
@@ -1641,17 +1672,6 @@ class PendingRecordsView(View):
                     row[0],
                     f'<a href="/record/pending/{row[0]}">{row[1]}</a>'
                 ])
-            # with connection.cursor() as cursor:
-            #     cursor.execute("SELECT records_record.id, records_record.title FROM records_record INNER JOIN records_checkedrecord ON records_record.id = records_checkedrecord.record_id INNER JOIN accounts_user ON records_checkedrecord.checked_by_id = accounts_user.id WHERE accounts_user.role_id = 3 AND records_checkedrecord.status = 'approved' AND records_record.id NOT IN (SELECT records_checkedrecord.record_id FROM records_checkedrecord INNER JOIN accounts_user ON records_checkedrecord.checked_by_id = accounts_user.id WHERE accounts_user.role_id = 4 or accounts_user.role_id = 7)")
-            #     rows = cursor.fetchall()
-            #     print('Rows')
-            #     print(rows)
-            # data = []
-            # for row in rows:
-            #     data.append([
-            #         row[0],
-            #         f'<a href="/record/pending/{row[0]}">{row[1]}</a>'
-            #     ])
         elif request.user.role.id == 5:
             rdco_exclude = CheckedRecord.objects.select_related('record').filter(checked_by__in=Subquery(User.objects.filter(role=5).values('pk')))
             rdco_include = CheckedRecord.objects.select_related('record').filter(Q(checked_by__in=Subquery(User.objects.filter(role=4).values('pk'))) | Q(checked_by__in=Subquery(User.objects.filter(role=7).values('pk'))), status='approved')
@@ -1664,17 +1684,6 @@ class PendingRecordsView(View):
                     row[0],
                     f'<a href="/record/pending/{row[0]}">{row[1]}</a>'
                 ])
-            # with connection.cursor() as cursor:
-            #     cursor.execute("SELECT records_record.id, records_record.title FROM records_record INNER JOIN records_checkedrecord ON records_record.id = records_checkedrecord.record_id INNER JOIN accounts_user ON records_checkedrecord.checked_by_id = accounts_user.id WHERE (accounts_user.role_id = 4 OR accounts_user.role_id = 7) AND records_checkedrecord.status = 'approved' AND records_record.id NOT IN (SELECT records_checkedrecord.record_id FROM records_checkedrecord INNER JOIN accounts_user ON records_checkedrecord.checked_by_id = accounts_user.id WHERE accounts_user.role_id = 5)")
-            #     rows = cursor.fetchall()
-            #     print('ROWS')
-            #     print(rows)
-            # data = []
-            # for row in rows:
-            #     data.append([
-            #         row[0],
-            #         f'<a href="/record/pending/{row[0]}">{row[1]}</a>'
-            #     ])
         return JsonResponse({"data": data})
 
 
