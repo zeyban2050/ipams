@@ -92,7 +92,6 @@ class Home(View):
     def get(self, request):
         login_required = request.GET.get('next', False)
         user_roles = UserRole.objects.all()
-
         departments = Department.objects.all()
 
         logs = request.session.get('logs', '')
@@ -144,15 +143,10 @@ class Home(View):
                 budget_max_filter = request.POST.get('budget_max')
                 collaborator_filter = request.POST.get('collaborator')
                 department_filter = request.POST['department']
-
                 ip_filter = request.POST.get('ip_cb')
-                print(ip_filter)
                 commercialization_filter = request.POST.get('commercialization_cb')
-                print(commercialization_filter)
                 community_filter = request.POST.get('community_cb')
-                print(community_filter)
-
-
+                
                 if year_from_filter != '' or year_to_filter != '':
                     records = records.filter(year_accomplished__gte=year_from_filter).filter(year_accomplished__lte=year_to_filter)
                 
@@ -1112,7 +1106,7 @@ class Add(View):
                     Collaboration(collaboration_type=CollaborationType.objects.get(pk=collaboration_types[i]),
                                   industry=industries[i], institution=institutions[i], record=record).save()
                 messages.success(request, 'Record submitted!')
-                # --> inhere
+                # notification to adviser after adding new record
                 newRecordAdded(request, request.user.id, record.adviser.id, record.id)
                 return redirect('records-index')
             elif not file_is_valid:
