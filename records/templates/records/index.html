@@ -48,14 +48,22 @@
 					"scrollX": true,
 					"responsive": true,
 					"order": [[ 2, "desc" ], [ 1, "asc" ]],
+					"pageLength": 15,
 					"columnDefs": [
 						{
+							//hide ID column in records table and do not allow it to be searched
 							"targets": [ 0 ],
 							"visible": false,
-							"searchable": false
+							"searchable": false,
 						},
-						{ "width": "13%", "targets": 2 }, // Set the third column's width to 13% with columnDefs
-						{ "width": "13%", "targets": 3 }, // Set the fourth column's width to 13% with columnDefs
+						{
+							//hide columns from REPRESENTATIVE to TAG 3 in records table and allow search
+							"targets": [ 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19 ],
+							"visible": false,
+							"searchable": true,
+						},
+						{ "width": "13%", "targets": 21 }, // Set the third column's width to 13% with columnDefs
+						{ "width": "13%", "targets": 22 }, // Set the fourth column's width to 13% with columnDefs
 					],
 				});
 			{% else %}
@@ -75,11 +83,19 @@
 					"scrollX": true,
 					"responsive": true,
 					"order": [[ 2, "desc" ], [ 1, "asc" ]],
+					"pageLength": 15,
 					"columnDefs": [
 						{
+							//hide ID column in records table and do not allow it to be searched
 							"targets": [ 0 ],
 							"visible": false,
-							"searchable": false
+							"searchable": false,
+						},
+						{
+							//hide columns from REPRESENTATIVE to ABSTRACT in records table and allow search
+							"targets": [ 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19 ],
+							"visible": false,
+							"searchable": true,
 						},
 					],
 				});
@@ -410,7 +426,28 @@
 							<table id="tbl-records" class="table table-striped table-bordered table-condensed" style="width:100%">
 						        <thead>
 						            <tr>
+						            	<!-- hidden column -->
 										<th>ID</th>
+										<th>REPRESENTATIVE</th>
+						                <th>CONFERENCE LEVEL</th>
+						                <th>CONFERENCE TITLE</th>
+						                <th>CONFERENCE VENUE</th>
+						                <th>PUBLICATION</th>
+						                <th>ISBN</th>
+						                <th>ISSN</th>
+						                <th>ISI</th>
+						                <th>PUBLICATION LEVEL</th>
+						                <th>BUDGET TYPE</th>
+						                <th>BUDGET ALLOCATION</th>
+						                <th>FUNDING SOURCE</th>
+						                <th>COLLABORATION TYPE</th>
+						                <th>INSTITUTION</th>
+						                <th>INDUSTRY NAME</th>
+						                <th>TAG 1</th>
+						                <th>TAG 2</th>
+						                <th>TAG 3</th>
+						                <th>ABSTRACT</th>
+										<!-- visible columns -->
 						                <th>RESEARCH TITLE</th>
 						                <th>YEAR STARTED</th>
 						                {% if user.role.id > 2 %}
@@ -418,7 +455,6 @@
 						                {% endif %}
 						                <th>CLASS</th>
 						                <th>PSCED</th>
-						                <!-- <th>AUTHOR</th> -->
 						            </tr>
 						        </thead>
 						        <tbody>

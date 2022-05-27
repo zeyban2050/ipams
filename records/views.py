@@ -117,6 +117,9 @@ class Home(View):
     def post(self, request):
         if is_ajax(request=request):
             data = []
+            ip_tag = ''
+            commercialization_tag = ''
+            community_tag = ''
             checked_records = CheckedRecord.objects.filter(status='approved', checked_by__in=Subquery(User.objects.filter(role=5).values('pk')))
             records = Record.objects.filter(pk__in=Subquery(checked_records.values('record_id')))
 
@@ -209,34 +212,164 @@ class Home(View):
                 roleRequestApproved(request, request.user.id, user.id)
             # setting datatable records
             for record in records:
+                record_conference = Conference.objects.filter(record=record.id)
+                if record_conference:
+                    for i in record_conference:
+                        record_conference_title = i.title
+                        record_conference_venue = i.venue
+                        if i.conference_level is not None:
+                            record_conference_level = i.conference_level.name
+                        else:
+                            record_conference_level = ''
+                else:
+                    record_conference_level = ''
+                    record_conference_title = ''
+                    record_conference_venue = ''
+
+                record_publication = Publication.objects.filter(record=record.id)
+                if record_publication:
+                    for i in record_publication:
+                        record_publication_name = i.name
+                        record_publication_isbn = i.isbn
+                        record_publication_issn = i.issn
+                        record_publication_isi = i.isi
+                        if i.publication_level is not None:
+                            record_publication_level = i.publication_level.name
+                        else:
+                            record_publication_level = ''
+                else:
+                    record_publication_name = ''
+                    record_publication_isbn = ''
+                    record_publication_issn = ''
+                    record_publication_isi = ''
+                    record_publication_level = ''
+
+                record_budget = Budget.objects.filter(record=record.id)
+                if record_budget:
+                    for i in record_budget:
+                        record_budget_allocation = i.budget_allocation
+                        record_funding_source = i.funding_source
+                        if i.budget_type is not None:
+                            record_budget_type = i.budget_type.name
+                        else:
+                            record_budget_type = ''
+                else:
+                    record_budget_type = ''
+                    record_budget_allocation = ''
+                    record_funding_source = ''
+
+                record_collaboration = Collaboration.objects.filter(record=record.id)
+                if record_collaboration:
+                    for i in record_collaboration:
+                        record_collaboration_institution = i.institution
+                        record_collaboration_industry = i.industry
+                        if i.collaboration_type is not None:
+                            record_collaboration_type = i.collaboration_type.name
+                        else:
+                            record_collaboration_type = ''
+                else:
+                    record_collaboration_type = ''
+                    record_collaboration_institution = ''
+                    record_collaboration_industry = ''
+
+                if record.is_ip == True:
+                    ip_tag = 'Intellectual Property'
+                if record.for_commercialization == True:
+                    commercialization_tag = 'Commercialization'
+                if record.community_extension == True:
+                    community_tag = 'Community Extension'
+
                 if request.user.is_anonymous:
                     data.append([
                         record.pk,
+                        # additional
+                        record.representative,
+                        record_conference_level,
+                        record_conference_title,
+                        record_conference_venue,
+                        record_publication_name,
+                        record_publication_isbn,
+                        record_publication_issn,
+                        record_publication_isi,
+                        record_publication_level,
+                        record_budget_type,
+                        record_budget_allocation,
+                        record_funding_source,
+                        record_collaboration_type,
+                        record_collaboration_institution,
+                        record_collaboration_industry,
+                        ip_tag,
+                        commercialization_tag,
+                        community_tag,
+                        record.abstract,
+                        # visible
                         '<a href="/record/' + str(
                         record.pk) + '">' + record.title + '</a>',
                         record.year_accomplished,
                         record.classification.name,
-                        record.psced_classification.name
+                        record.psced_classification.name,
                     ])
                 else:
                     if request.user.role.pk > 2:
                         data.append([
                             record.pk,
+                            # additional
+                            record.representative,
+                            record_conference_level,
+                            record_conference_title,
+                            record_conference_venue,
+                            record_publication_name,
+                            record_publication_isbn,
+                            record_publication_issn,
+                            record_publication_isi,
+                            record_publication_level,
+                            record_budget_type,
+                            record_budget_allocation,
+                            record_funding_source,
+                            record_collaboration_type,
+                            record_collaboration_institution,
+                            record_collaboration_industry,
+                            ip_tag,
+                            commercialization_tag,
+                            community_tag,
+                            record.abstract,
+                            # visible
                             '<a href="/record/' + str(
                             record.pk) + '">' + record.title + '</a>',
                             record.year_accomplished,
                             record.year_completed,
                             record.classification.name,
-                            record.psced_classification.name
+                            record.psced_classification.name,
                         ])
                     else:
                         data.append([
                             record.pk,
+                            # additional
+                            record.representative,
+                            record_conference_level,
+                            record_conference_title,
+                            record_conference_venue,
+                            record_publication_name,
+                            record_publication_isbn,
+                            record_publication_issn,
+                            record_publication_isi,
+                            record_publication_level,
+                            record_budget_type,
+                            record_budget_allocation,
+                            record_funding_source,
+                            record_collaboration_type,
+                            record_collaboration_institution,
+                            record_collaboration_industry,
+                            ip_tag,
+                            commercialization_tag,
+                            community_tag,
+                            record.abstract,
+                            # visible
                             '<a href="/record/' + str(
                             record.pk) + '">' + record.title + '</a>',
                             record.year_accomplished,
                             record.classification.name,
-                            record.psced_classification.name
+                            record.psced_classification.name,
                         ])
 
             return JsonResponse({"data": data})
