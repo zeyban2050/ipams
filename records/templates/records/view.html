@@ -162,6 +162,11 @@
 		    		},
 		    	});
             });
+
+            // prevent users from copy pasting abstract
+            $('#abstract_content').bind("cut copy paste",function(e) {
+                e.preventDefault();
+            });
         });
 
 

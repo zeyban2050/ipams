@@ -26,7 +26,7 @@
             <div class="row">
                 <div class="col-12">
                     <label>Abstract:</label>
-                    {{ record.abstract|safe }}
+                    <span id="abstract_content">{{ record.abstract|safe }}</span>
                 </div>
             </div>
             {% if record.abstract_filename and user.role.id > 1 %}

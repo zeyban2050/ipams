@@ -86,6 +86,8 @@ class RoleRequest(models.Model):
 class UserRecord(models.Model):
 	record = models.ForeignKey(Record, on_delete=models.CASCADE)
 	user = models.ForeignKey(User, on_delete=models.CASCADE)
+	is_marked = models.BooleanField(default=False) # marked for deletion
+	reason = models.TextField()
 
 
 class Log(models.Model):

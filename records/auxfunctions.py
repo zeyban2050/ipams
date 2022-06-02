@@ -127,7 +127,7 @@ def newRecordAdded(request, userID, adviserID, recordID):
 	message = (
 		f'{user.first_name} {user.last_name} has submitted a new record entitled {record.title}' \
 		f' with the classification of {record.classification} and a PSCED classification of' \
-		f' {record.psced_classification} on {record.date_created.strftime("%m/%d/%Y %-I:%M")}.' \
+		f' {record.psced_classification} on {record.date_created.strftime("%m/%d/%Y %H:%M")}.' \
 		f'\nTo view the record, login to the website {redirect_path}'
 	)
 	to_email = adviser.email
@@ -172,9 +172,9 @@ def resubmission(request, userID, recordID, checkedByID):
 
 	mail_subject = NotificationType.objects.get(pk=5)
 	message = (
-		f'{user.first_name} {user.last_name} has resubmitted the record {record.title}' \
+		f"{user.first_name} {user.last_name} has resubmitted the record {record.title}" \
 		f' under the classification of {record.classification} and a PSCED classification of' \
-		f' {record.psced_classification} on {record.date_created.strftime("%m/%d/%Y %-I:%M")}.' \
+		f' {record.psced_classification} on {record.date_created.strftime("%m/%d/%Y %H:%M")}.' \
 		f'\nTo view the record, login to the website {redirect_path}'
 	)
 	to_email = recipient.email
@@ -234,7 +234,8 @@ def recordStatus(request, userID, recordID, recipientID, status):
 	elif record.record_type.pk == 3:
 		notif_type = NotificationType.objects.get(pk=4)
 
-	redirect_path = request.build_absolute_uri('record/pending/' + str(record.pk))
+	# redirect_path = request.build_absolute_uri('record/pending/' + str(record.pk))
+	redirect_path = request.build_absolute_uri()
 
 	if status == 'approved':
 		if user.role.name == 'Adviser':
@@ -316,3 +317,90 @@ def recordStatus(request, userID, recordID, recipientID, status):
 		)
 
 	notification.save()
+
+def deleteRecord(request, userID, recordID, reason): #Only the admins can approve to delete a record
+	user = User.objects.get(pk=userID)
+	record = Record.objects.get(pk=recordID)
+
+	if user.role.name == 'Student':
+		course = Student.objects.get(user=user.id).course.name
+		role = UserRole.objects.get(pk=2)
+	if user.role.name == 'Adviser':
+		course = ''
+		role = UserRole.objects.get(pk=3)
+	if user.role.name == 'KTTO':
+		course = ''
+		role = UserRole.objects.get(pk=4)
+	if user.role.name == 'RDCO':
+		course = ''
+		role = UserRole.objects.get(pk=5)
+	if user.role.name == 'TBI':
+		course = ''
+		role = UserRole.objects.get(pk=7)
+
+	notification = Notification(user=user, course=course, role=role, record=record, notif_type=NotificationType.objects.get(pk=10), 
+		to_ktto=True, to_rdco=True, is_read=False, date_created=dt.now())
+	
+	notification.save()
+
+	url = request.build_absolute_uri()
+	base_url = url.split("record/")
+	redirect_path = base_url[0] + 'records/pending/'
+
+	kr_accounts = User.objects.filter(Q(role__in=Subquery(UserRole.objects.filter(pk=5).values('pk'))) | Q(role__in=Subquery(UserRole.objects.filter(pk=4).values('pk'))))
+
+	mail_subject = NotificationType.objects.get(pk=10)
+	message = (
+		f'{user.first_name} {user.last_name} has requested the approval to delete the record {record.title}' \
+		f' with a classification of {record.classification} and a PSCED classification of' \
+		f' {record.psced_classification} with the reasoning {reason}.' \
+		f'\nTo approve the request, login to the website and go to {redirect_path}'
+	)
+	
+	messages_to_send = [(mail_subject, message, settings.EMAIL_HOST_USER, [account.email]) for account in kr_accounts]
+	send_mass_mail(messages_to_send) 
+
+
+def approvedDeleteRecord(request, userID, recordID, recipientID, reason):
+	user = User.objects.get(pk=userID) # the admin who approved the request
+	record = Record.objects.get(pk=recordID)
+	recipient = User.objects.get(pk=recipientID) #the user who requested for approval to delete a record
+
+	notification = Notification(user=user, role=user.role, recipient=recipient, 
+		notif_type=NotificationType.objects.get(pk=11), to_ktto=True, to_rdco=True, is_read=False, date_created=dt.now())
+
+	notification.save()
+
+	url = request.build_absolute_uri()
+	base_url = url.split("record/")
+	redirect_path = base_url[0] + 'records/pending/'
+
+	# to admins who would approved the request
+	kr_accounts = User.objects.filter(Q(role__in=Subquery(UserRole.objects.filter(pk=5).values('pk'))) | Q(role__in=Subquery(UserRole.objects.filter(pk=4).values('pk'))))
+
+	mail_subject = NotificationType.objects.get(pk=11)
+	message = (
+		f'{user.first_name} {user.last_name} has approved the request of {recipient.first_name} {recipient.last_name} to delete the record {record.title}' \
+		f' with a classification of {record.classification} and a PSCED classification of' \
+		f' {record.psced_classification} with the reasoning {reason}. \n\nThe record has been automatically deleted.' \
+		f'\nTo approve other requests, login to the website {redirect_path}'
+	)
+	
+	messages_to_send = [(mail_subject, message, settings.EMAIL_HOST_USER, [account.email]) for account in kr_accounts]
+	send_mass_mail(messages_to_send) 
+
+	# for whoever sent the request that got approved
+	message = (
+		f'{user.first_name} {user.last_name} has approved your request to delete the record {record.title}' \
+		f' with a classification of {record.classification} and a PSCED classification of' \
+		f' {record.psced_classification} with the reasoning {reason}. \n\nThe record has been automatically deleted.' \
+		f'\nFor more information, login to the website {redirect_path}'
+	)
+	to_email = recipient.email
+	send_mail(
+	    mail_subject, 
+	    message, 
+	    settings.EMAIL_HOST_USER, 
+	    [to_email],
+	    fail_silently=False
+	)

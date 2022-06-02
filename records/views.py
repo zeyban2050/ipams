@@ -739,6 +739,94 @@ class PendingRecordView(View):
                 return redirect('records-pending')
 
 
+# template view when selecting from pending delete requests table
+class PendingDeleteRecordsView(View):
+    name = 'records/profile/pending_delete_records.html'
+    author_roles = AuthorRole.objects.all()
+    classifications = Classification.objects.all()
+    psced_classifications = PSCEDClassification.objects.all().order_by('name')
+    conference_levels = ConferenceLevel.objects.all()
+    budget_types = BudgetType.objects.all()
+    collaboration_types = CollaborationType.objects.all()
+    publication_levels = PublicationLevel.objects.all()
+    uploads = Upload.objects.all()
+    checked_record_form = CheckedRecordForm()
+    context = {
+        'author_roles': author_roles,
+        'classifications': classifications,
+        'psced_classifications': psced_classifications,
+        'conference_levels': conference_levels,
+        'budget_types': budget_types,
+        'collaboration_types': collaboration_types,
+        'publication_levels': publication_levels,
+        'uploads': uploads,
+        'checked_record_form': checked_record_form,
+    }
+
+    @method_decorator(login_required(login_url='/'))
+    def get(self, request, record_id):
+        owners = UserRecord.objects.filter(record=Record.objects.get(pk=record_id))
+        self.context['owners'] = owners
+        checked_records = CheckedRecord.objects.filter(record=Record.objects.get(pk=record_id))
+        role_checked = False
+        is_owner = False
+        is_removable = False
+        if request.user.role.pk > 3:
+            is_removable = True
+        for checked_record in checked_records:
+            if checked_record.checked_by.role.id == request.user.role.pk:
+                role_checked=True
+            if checked_record.status == 'declined':
+                is_removable = True
+        if UserRecord.objects.filter(user=request.user, record=Record.objects.get(pk=record_id)):
+            is_owner = True
+        self.context['role_checked'] = role_checked
+        self.context['record'] = Record.objects.get(pk=record_id)
+        self.context['is_owner'] = is_owner
+        self.context['is_removable'] = is_removable
+        self.context['reason'] = UserRecord.objects.get(record=Record.objects.get(pk=record_id)).reason
+        return render(request, self.name, self.context)
+
+    def post(self, request, record_id):
+        if is_ajax(request=request):
+            # removing record
+            if request.POST.get('remove', 'false') == 'true':
+                del_record = Record.objects.get(pk=record_id)
+                user_record = UserRecord.objects.get(record=Record.objects.get(pk=record_id))
+                del_record.abstract_file.delete()
+                approvedDeleteRecord(request, request.user.id, record_id, user_record.user.pk, user_record.reason)
+                del_record.delete()
+                return JsonResponse({'success': True})
+            # get uploaded document data
+            elif request.POST.get('get_document', 'false') == 'true':
+                upload = Upload.objects.get(pk=request.POST.get('upload_id', 0))
+                record = Record.objects.get(pk=request.POST.get('record_id', 0))
+                record_upload = RecordUpload.objects.filter(upload=upload, record=record).first()
+                checked_uploads = CheckedUpload.objects.filter(record_upload=record_upload).order_by('-date_checked')
+                comments = []
+                checked_bys = []
+                checked_dates = []
+                for checked_upload in checked_uploads:
+                    comments.append(checked_upload.comment)
+                    checked_bys.append(checked_upload.checked_by.username)
+                    checked_dates.append(checked_upload.date_checked)
+                if record_upload is None:
+                    return JsonResponse({'success': False, 'doc-title': upload.name})
+                else:
+                    return JsonResponse({'success': True,
+                                         'doc-title': record_upload.upload.name,
+                                         'is-ip': record_upload.is_ip,
+                                         'for-commercialization': record_upload.for_commercialization,
+                                         'comments': comments,
+                                         'checked_bys': checked_bys,
+                                         'checked_dates': checked_dates,
+                                         'record-upload-id': record_upload.pk})
+            else:
+                return JsonResponse({'success': False})
+
+            # return redirect('records-pending')
+
+
 # template view when selecting from my records table
 class MyRecordView(View):
     name = 'records/profile/view_myrecords.html'
@@ -806,14 +894,27 @@ class MyRecordView(View):
     def post(self, request, record_id):
         if is_ajax(request=request):
             # removing record
-            if request.POST.get('remove', 'false') == 'true':
-                del_record = Record.objects.get(pk=record_id)
-                del_record.abstract_file.delete()
-                del_record_uploads = RecordUpload.objects.filter(record=del_record)
-                for del_record_upload in del_record_uploads:
-                    del_record_upload.file.delete()
-                del_record.delete()
+            if request.POST.get('deleteRecord', 'false') == 'true':
+                reason = request.POST.get('reason')
+                print(reason)
+                recordTitle = request.POST.get('recordTitle')
+                print(recordTitle)
+                record = Record.objects.get(title=recordTitle)
+                print(record.title)
+                user_record = UserRecord.objects.filter(record=record.pk).update(is_marked=True, reason=reason)
+                print(user_record)
+                deleteRecord(request, request.user.id, record.pk, reason)
                 return JsonResponse({'success': True})
+                
+            # if request.POST.get('remove', 'false') == 'true':
+            #     del_record = Record.objects.get(pk=record_id)
+            #     del_record.abstract_file.delete()
+            #     del_record_uploads = RecordUpload.objects.filter(record=del_record)
+            #     for del_record_upload in del_record_uploads:
+            #         del_record_upload.file.delete()
+            #     del_record.delete()
+            #     return JsonResponse({'success': True})
+
             # resubmitting
             if request.POST.get('resubmit', 'false') == 'true':
                 checked_record = CheckedRecord.objects.get(record=Record.objects.get(pk=record_id), status='declined')
@@ -1755,14 +1856,23 @@ class MyRecordsView(View):
                     ktto_checked = record_status
                 elif checked_record.checked_by.role.pk == 5:
                     rdco_checked = record_status
-            data.append([
-                user_record.record.pk,
-                '<a href="/record/myrecords/' + str(
-                    user_record.record.pk) + '">' + user_record.record.title + '</a>',
-                adviser_checked,
-                ktto_checked,
-                rdco_checked,
-            ])
+            if user_record.is_marked == False:
+                data.append([
+                    user_record.record.pk,
+                    '<a href="/record/myrecords/' + str(
+                        user_record.record.pk) + '">' + user_record.record.title + '</a>',
+                    adviser_checked,
+                    ktto_checked,
+                    rdco_checked,
+                ])
+            elif user_record.is_marked == True:
+                 data.append([
+                    user_record.record.pk,
+                    user_record.record.title + ' <i class="fa fa-ban" aria-hidden="true" title="Marked for deletion"></i>',
+                    adviser_checked,
+                    ktto_checked,
+                    rdco_checked,
+                ])
         return JsonResponse({"data": data})
 
 
@@ -1811,8 +1921,41 @@ class PendingRecordsView(View):
                     row[0],
                     f'<a href="/record/pending/{row[0]}">{row[1]}</a>'
                 ])
-        return JsonResponse({"data": data})
+        return JsonResponse({ "data": data })
 
+def get_all_delete_requests(request):
+    if request.method == 'POST':
+        if request.user.role.id == 4 or request.user.role.id == 7:
+            delete_request_data = []
+            user_record_marked = UserRecord.objects.filter(is_marked=True)
+            ktto_delete_pendings = Record.objects.filter(pk__in=Subquery(user_record_marked.values('record'))).values('pk', 'title')
+            tuples_ktto_delete_pendings = [tuple(k.values()) for k in ktto_delete_pendings]
+
+            tuples_record_marked = [tuple(rm.values()) for rm in user_record_marked.values('reason')]
+            merged_tuples = [(tuples_ktto_delete_pendings[i], tuples_record_marked[i]) for i in range(0, len(tuples_ktto_delete_pendings))]
+
+            for row in merged_tuples:
+                delete_request_data.append([
+                    row[0][0],
+                    f'<a href="/record/pending/delete/request/{row[0][0]}">{row[0][1]}</a>',
+                    row[1],
+                ])
+        elif request.user.role.id == 5:
+            delete_request_data = []
+            user_record_marked = UserRecord.objects.filter(is_marked=True)
+            rdco_delete_pendings = Record.objects.filter(pk__in=Subquery(user_record_marked.values('record'))).values('pk', 'title')
+            tuples_rdco_delete_pendings = [tuple(k.values()) for k in rdco_delete_pendings]
+
+            tuples_record_marked = [tuple(rm.values()) for rm in user_record_marked.values('reason')]
+            merged_tuples = [(tuples_rdco_delete_pendings[i], tuples_record_marked[i]) for i in range(0, len(tuples_rdco_delete_pendings))]
+            
+            for row in merged_tuples:
+                delete_request_data.append([
+                    row[0][0],
+                    f'<a href="/record/pending/delete/request/{row[0][0]}">{row[0][1]}</a>',
+                    row[1],
+                ])
+        return JsonResponse({ "data": delete_request_data })
 
 class ApprovedRecordsView(View):
     template_name = 'records/profile/approved_records.html'

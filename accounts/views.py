@@ -14,7 +14,7 @@ from django.shortcuts import redirect
 from ipams import settings
 from . import forms
 from .decorators import authorized_roles
-from .models import User, UserRole, RoleRequest, Course, Student, Log, Setting, College, Department, Adviser
+from .models import User, UserRole, RoleRequest, Course, Student, Log, Setting, College, Department, Adviser, UserRecord
 from records.models import CheckedRecord, Record
 from notifications.models import Notification, NotificationType
 from accounts.auxfunctions import roleRequestStudent, roleRequestAdviser
@@ -310,16 +310,24 @@ def get_pending_count(request):
     if request.method == 'POST':
         if request.user.role.id == 3:
             adviser_exclude = CheckedRecord.objects.select_related('record').all()
-            rows = Record.objects.filter(adviser=request.user.pk).exclude(pk__in=Subquery(adviser_exclude.values('record').distinct())).values('pk', 'title')                
+            new_record_rows = Record.objects.filter(adviser=request.user.pk).exclude(pk__in=Subquery(adviser_exclude.values('record').distinct())).values('pk', 'title')
+            delete_request_rows = ''
+
         elif request.user.role.id == 4 or request.user.role.id == 7:
             ktto_exclude = CheckedRecord.objects.select_related('record').filter(Q(checked_by__in=Subquery(User.objects.filter(role=4).values('pk'))) | Q(checked_by__in=Subquery(User.objects.filter(role=7).values('pk'))))
             ktto_include = CheckedRecord.objects.select_related('record').filter(status='approved', checked_by__in=Subquery(User.objects.filter(role=3).values('pk')))
-            rows = Record.objects.filter(pk__in=Subquery(ktto_include.values('record'))).exclude(pk__in=Subquery(ktto_exclude.values('record'))).values('pk', 'title')
+            # rows = Record.objects.filter(pk__in=Subquery(ktto_include.values('record'))).exclude(pk__in=Subquery(ktto_exclude.values('record'))).values('pk', 'title')
+            new_record_rows = Record.objects.filter(pk__in=Subquery(ktto_include.values('record'))).exclude(pk__in=Subquery(ktto_exclude.values('record'))).values('pk', 'title')
+            delete_request_rows = UserRecord.objects.filter(is_marked=True)
+
         elif request.user.role.id == 5:
             rdco_exclude = CheckedRecord.objects.select_related('record').filter(checked_by__in=Subquery(User.objects.filter(role=5).values('pk')))
             rdco_include = CheckedRecord.objects.select_related('record').filter(Q(checked_by__in=Subquery(User.objects.filter(role=4).values('pk'))) | Q(checked_by__in=Subquery(User.objects.filter(role=7).values('pk'))), status='approved')
-            rows = Record.objects.filter(pk__in=Subquery(rdco_include.values('record'))).exclude(pk__in=Subquery(rdco_exclude.values('record'))).values('pk','title')
-        return JsonResponse({"pending-count": len(rows)})
+            # rows = Record.objects.filter(pk__in=Subquery(rdco_include.values('record'))).exclude(pk__in=Subquery(rdco_exclude.values('record'))).values('pk','title')
+            new_record_rows = Record.objects.filter(pk__in=Subquery(rdco_include.values('record'))).exclude(pk__in=Subquery(rdco_exclude.values('record'))).values('pk','title')
+            delete_request_rows = UserRecord.objects.filter(is_marked=True)
+
+        return JsonResponse({"pending-count": len(new_record_rows) + len(delete_request_rows)})
 
 
 class HelpView(View):

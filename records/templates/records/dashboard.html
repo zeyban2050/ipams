@@ -18,7 +18,7 @@
 			    	data = [response.basic, response.applied];
 			    	appliedVsBasic = new Chart(document.getElementById('appliedVsBasic').getContext('2d'),
 					{
-					    type: 'pie',
+					    type: 'doughnut',
 					    data: {
 					        labels: ['Applied', 'Basic'],
 					        datasets: [{
@@ -31,19 +31,36 @@
 					            	'#ffffff',
 					                '#ffffff',
 					            ],
-					            borderWidth: 1
+					            borderWidth: 5,
+					            spacing: 5,
 					        }]
 					    },
 					    options: {
 					    	responsive: true,
 					    	title: {
 					    	  display: true,
-					    	  text: 'Applied vs Basic'
+					    	  text: 'Record Classification'
 					    	},
 
 					        legend: {
 					        	display: true
-					        }
+					        },
+
+
+					        plugins: {
+						        datalabels: {
+						            formatter: (value, ctx) => {
+						                let sum = 0;
+						                let dataArr = ctx.chart.data.datasets[0].data;
+						                dataArr.map(data => {
+						                    sum += data;
+						                });
+						                let percentage = (value*100 / sum).toFixed(2)+"%";
+						                return percentage;
+						            },
+						            color: '#fff',
+						        }
+						    },
 					    }
 					});
 			//------------------------------------No. of Classification-------------------------------------
