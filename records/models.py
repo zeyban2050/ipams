@@ -85,15 +85,18 @@ class Record(models.Model):
     record_type = models.ForeignKey(RecordType, on_delete=models.DO_NOTHING, null=True, blank=True, default=3)
     representative = models.CharField(max_length=100)
     code = models.CharField(max_length=100, null=True, blank=True)
+    is_marked = models.BooleanField(default=False) # marked for deletion
+    reason = models.TextField() # reason for deleting the record
 
     def __str__(self):
         return self.title
-
 
 class ResearchRecord(models.Model):
     proposal = models.ForeignKey(Record, on_delete=models.CASCADE, related_name='proposal')
     research = models.ForeignKey(Record, on_delete=models.SET_NULL, related_name='research', null=True, blank=True)
 
+    def __str__(self):
+        return self.record.title
 
 class CheckedRecord(models.Model):
     record = models.ForeignKey(Record, on_delete=models.CASCADE)
@@ -102,6 +105,8 @@ class CheckedRecord(models.Model):
     comment = models.TextField()
     date_created = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return self.record.title
 
 class Publication(models.Model):
     name = models.CharField(max_length=200, null=True)
@@ -113,6 +118,8 @@ class Publication(models.Model):
     record = models.OneToOneField(Record, on_delete=models.CASCADE, primary_key=True, default=None)
     date_created = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return self.name
 
 class Author(models.Model):
     name = models.CharField(max_length=100)
@@ -120,6 +127,8 @@ class Author(models.Model):
     author_role = models.ForeignKey(AuthorRole, on_delete=models.DO_NOTHING)
     date_created = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return self.name
 
 class Conference(models.Model):
     title = models.CharField(max_length=100)
@@ -129,6 +138,8 @@ class Conference(models.Model):
     record = models.ForeignKey(Record, on_delete=models.CASCADE)
     date_created = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return self.title
 
 class Budget(models.Model):
     budget_allocation = models.FloatField()
@@ -137,6 +148,8 @@ class Budget(models.Model):
     record = models.ForeignKey(Record, on_delete=models.CASCADE)
     date_created = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return self.funding_source
 
 class Collaboration(models.Model):
     industry = models.CharField(max_length=100)
@@ -145,6 +158,8 @@ class Collaboration(models.Model):
     record = models.ForeignKey(Record, on_delete=models.CASCADE)
     date_created = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return self.institution
 
 class Upload(models.Model):
     name = models.CharField(max_length=100)
@@ -174,6 +189,8 @@ class RecordUpload(models.Model):
     for_commercialization = models.BooleanField(default=False)
     date_uploaded = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return self.record.title + " - " + self.upload.name
 
 class CheckedUpload(models.Model):
     comment = models.TextField()
@@ -181,3 +198,5 @@ class CheckedUpload(models.Model):
     record_upload = models.ForeignKey(RecordUpload, on_delete=models.CASCADE)
     date_checked = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return self.checked_by.username

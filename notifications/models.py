@@ -24,3 +24,6 @@ class Notification(models.Model):
     to_rdco = models.BooleanField(default=False)
     is_read = models.BooleanField(default=False)
     date_created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.notif_type.name

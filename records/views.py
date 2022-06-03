@@ -1278,10 +1278,10 @@ class Add(View):
                 record.representative = f'{request.user.first_name} {request.user.last_name}'
 
                 if file is not None:
-                    record.abstract_filesize = record.abstract_file.size
-                    record.abstract_filename = record.abstract_file.name
-                    upload_blob(settings.GS_BUCKET_NAME, record.abstract_file, record.abstract_file.name)
-                    record.abstract_file = None
+                    record.abstract_filesize = file.size
+                    record.abstract_filename = file.name
+                    # upload_blob(settings.GS_BUCKET_NAME, record.abstract_file, record.abstract_file.name)
+                    # record.abstract_file = None
 
                 record.save()
                 if request.user.role.pk == 2:
@@ -1299,11 +1299,11 @@ class Add(View):
                     if record.record_type.pk == upload.record_type.pk:
                         if request.FILES.get(f'upload-{upload.pk}', None):
                             file = request.FILES.get(f'upload-{upload.pk}', None)
-                            upload_blob(settings.GS_BUCKET_NAME, file, file.name)
-                            RecordUpload(file=None, filename=file.name, record=record,
-                                    upload=upload, record_upload_status=RecordUploadStatus.objects.get(pk=1)).save()
-                            # RecordUpload(file=request.FILES.get(f'upload-{upload.pk}', None), record=record,
-                            #                              upload=upload, record_upload_status=RecordUploadStatus.objects.get(pk=1)).save()
+                            # upload_blob(settings.GS_BUCKET_NAME, file, file.name)
+                            # RecordUpload(file=None, filename=file.name, record=record,
+                            #         upload=upload, record_upload_status=RecordUploadStatus.objects.get(pk=1)).save()
+                            RecordUpload(file=file, filename=file.name, record=record,
+                                upload=upload, record_upload_status=RecordUploadStatus.objects.get(pk=1)).save()
                 for owner in owners:
                     UserRecord(user=User.objects.get(pk=int(owner['id'])), record=record).save()
             if record is not None and file_is_valid:
@@ -1423,10 +1423,10 @@ class AddResearch(View):
                 record.record_type = RecordType.objects.get(pk=2)
 
                 if file is not None:
-                    record.abstract_filesize = record.abstract_file.size
-                    record.abstract_filename = record.abstract_file.name
-                    upload_blob(settings.GS_BUCKET_NAME, record.abstract_file, record.abstract_file.name)
-                    record.abstract_file = None
+                    record.abstract_filesize = file.size
+                    record.abstract_filename = file.name
+                    # upload_blob(settings.GS_BUCKET_NAME, record.abstract_file, record.abstract_file.name)
+                    # record.abstract_file = None
 
                 record.save()
                 research_record = ResearchRecord.objects.get(pk=research_record_id)
@@ -1436,11 +1436,10 @@ class AddResearch(View):
                 for upload in Upload.objects.all():
                     if request.FILES.get(f'upload-{upload.pk}', None):
                         file = request.FILES.get(f'upload-{upload.pk}', None)
-                        upload_blob(settings.GS_BUCKET_NAME, file, file.name)
-                        RecordUpload(file=None, filename=file.name, record=record,
-                                                     upload=upload).save()
-                        # RecordUpload(file=request.FILES.get(f'upload-{upload.pk}', None), record=record,
+                        # upload_blob(settings.GS_BUCKET_NAME, file, file.name)
+                        # RecordUpload(file=None, filename=file.name, record=record,
                         #                              upload=upload).save()
+                        RecordUpload(file=file, filename=file.name, record=record, upload=upload).save()
                 for owner in owners:
                     UserRecord(user=User.objects.get(pk=int(owner['id'])), record=record).save()
             if record is not None and file_is_valid:
@@ -1559,7 +1558,6 @@ class Edit(View):
                     users.append({'value': user.username, 'id': user.pk})
                 return JsonResponse({'users': users})
 
-        print(record_form.is_valid())
         if record_form.is_valid():
             record = record_form.save(commit=False)
             if record is None:
@@ -1575,35 +1573,37 @@ class Edit(View):
             else:
                 if file and file != record_instance.abstract_filename:
                     print(file,' != ', record_instance.abstract_filename)
-                    delete_blob(settings.GS_BUCKET_NAME, record_instance.abstract_filename)
+                    # delete_blob(settings.GS_BUCKET_NAME, record_instance.abstract_filename)
                     record.abstract_filesize = record.abstract_file.size
                     record.abstract_filename = record.abstract_file.name
-                    upload_blob(settings.GS_BUCKET_NAME, record.abstract_file, record.abstract_file.name)
-                    record.abstract_file = None
+                    # upload_blob(settings.GS_BUCKET_NAME, record.abstract_file, record.abstract_file.name)
+                    # record.abstract_file = None
+
                 record.save()
                 # documents search files check
                 for upload in Upload.objects.all():
                     if request.FILES.get(f'upload-{upload.pk}', None):
                         record_upload = RecordUpload.objects.filter(record=record, upload=upload).first()
                         file = request.FILES.get(f'upload-{upload.pk}', None)
+
                         if record_upload is not None:
-                            if file and file != record_upload.filename:
-                                print(file, ' != ', record_upload.filename)
-                                delete_blob(settings.GS_BUCKET_NAME, record_upload.filename)
-                                upload_blob(settings.GS_BUCKET_NAME, file, file.name)
+                            # if file and file != record_upload.filename:
+                            #     print(file, ' != ', record_upload.filename)
+                            #     delete_blob(settings.GS_BUCKET_NAME, record_upload.filename)
+                            #     upload_blob(settings.GS_BUCKET_NAME, file, file.name)
                             if record_upload.record_upload_status.pk not in [2, 3, 5]:
-                                # record_upload.file = request.FILES.get(f'upload-{upload.pk}', None)
-                                record_upload.file = None
+                                record_upload.file = file
+                                # record_upload.file = None
                                 record_upload.filename = file.name
                                 record_upload.save()
                             else:
                                 messages.error(request, 'Cannot be updated, document has been processed')
                         else:
-                            upload_blob(settings.GS_BUCKET_NAME, file, file.name)
-                            RecordUpload(file=None, filename=file.name, record=record,
-                                                     upload=upload, record_upload_status=RecordUploadStatus.objects.get(pk=1)).save()
-                            # RecordUpload(file=request.FILES.get(f'upload-{upload.pk}', None), record=record,
+                            # upload_blob(settings.GS_BUCKET_NAME, file, file.name)
+                            # RecordUpload(file=None, filename=file.name, record=record,
                             #                          upload=upload, record_upload_status=RecordUploadStatus.objects.get(pk=1)).save()
+                            RecordUpload(file=file, filename=file.name, record=record, 
+                                upload=upload, record_upload_status=RecordUploadStatus.objects.get(pk=1)).save()
 
             if record is not None and file_is_valid:
                 publication_form = forms.PublicationForm(request.POST, instance=Publication.objects.get(record=record))
@@ -1798,32 +1798,37 @@ def download_format(request):
 
 @authorized_roles(roles=['student', 'adviser', 'ktto', 'rdco', 'itso', 'tbi'])
 def download_abstract(request, record_id):
-    # record = Record.objects.get(pk=record_id)
-    # filename = record.abstract_file.name.split('/')[-1]
-    # response = HttpResponse(record.abstract_file, content_type='text/plain')
-    # response['Content-Disposition'] = 'attachment; filename=%s' % filename
-    # return response
-
     record = Record.objects.get(pk=record_id)
-    # source_blob_name = 'abstract/'+record.abstract_filename
-    source_blob_name = record.abstract_filename
-    link = download_blob(settings.GS_BUCKET_NAME, source_blob_name)
-    return HttpResponseRedirect(link)
+    # filename = record.abstract_file.name.split('/')[-1]
+    filename = record.abstract_filename
+    response = HttpResponse(record.abstract_file, content_type='text/plain')
+    response['Content-Disposition'] = 'attachment; filename=%s' % filename
+    return response
+
+    # download abstract from google cloud storage
+    # record = Record.objects.get(pk=record_id)
+    # # source_blob_name = 'abstract/'+record.abstract_filename
+    # source_blob_name = record.abstract_filename
+    # link = download_blob(settings.GS_BUCKET_NAME, source_blob_name)
+    # return HttpResponseRedirect(link)
 
 
+# documents in upload tab
 @authorized_roles(roles=['student', 'adviser', 'ktto', 'rdco', 'itso', 'tbi'])
 def download_document(request, record_upload_id):
-    # record_upload = RecordUpload.objects.get(pk=record_upload_id)
-    # filename = record_upload.file.name.split('/')[-1]
-    # response = HttpResponse(record_upload.file, content_type='text/plain')
-    # response['Content-Disposition'] = 'attachment; filename=%s' % filename
-    # return response
-
     record_upload = RecordUpload.objects.get(pk=record_upload_id)
-    # source_blob_name = 'abstract/'+record.abstract_filename
-    source_blob_name = record_upload.filename
-    link = download_blob(settings.GS_BUCKET_NAME, source_blob_name)
-    return HttpResponseRedirect(link)
+    # filename = record_upload.file.name.split('/')[-1]
+    filename = record_upload.filename
+    response = HttpResponse(record_upload.file, content_type='text/plain')
+    response['Content-Disposition'] = 'attachment; filename=%s' % filename
+    return response
+
+    # download document from google cloud storage
+    # record_upload = RecordUpload.objects.get(pk=record_upload_id)
+    # # source_blob_name = 'abstract/'+record.abstract_filename
+    # source_blob_name = record_upload.filename
+    # link = download_blob(settings.GS_BUCKET_NAME, source_blob_name)
+    # return HttpResponseRedirect(link)
 
 
 # table view of all my records
