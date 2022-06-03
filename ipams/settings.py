@@ -180,20 +180,12 @@ GOOGLE_RECAPTCHA_SECRET_KEY = '6Lckj-EbAAAAAEKoK1quZBP62i5NY57NlqDko-kL'
 GOOGLE_RECAPTCHA_SITE_KEY = '6Lckj-EbAAAAAHKCPuWWZCsDMD48xYL8XYc0OPOt'
 TEST_FORM = True
 
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
-# EMAIL_USE_SSL = True
-# EMAIL_HOST = [
-#     'smtp.gmail.com',
-#     'smtp-mail.outlook.com',
-#     'smtp.office365.com',
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-#     'smtp.mail.yahoo.com'
-# ]
 EMAIL_HOST_USER = 'ipamsdevteam22@gmail.com' 
 EMAIL_HOST_PASSWORD = 'fxmdxdbactlknwia'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  
