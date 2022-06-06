@@ -15,33 +15,73 @@
             });
             $("#btn-remove").on("click", function(){
                 Swal.fire({
-                  title: 'Are you sure?',
-                  text: "You won't be able to revert this!",
+                  title: 'Reason for deletion.',
+                  text: "This action is irreversible! A request will be sent to an admin for approval. Please state the reason for deleting this record.",
+                  input: 'textarea',
                   type: 'warning',
                   showCancelButton: true,
                   confirmButtonColor: '#3085d6',
                   cancelButtonColor: '#d33',
-                  confirmButtonText: 'Yes, delete it!'
+                  confirmButtonText: 'Submit Reason'
                 }).then((result) => {
                   if (result.value) {
-                     $.ajax({
-		    	    	"headers": { "X-CSRFToken": '{{ csrf_token }}' },
-		    	    	"type": "post",
+                    $.ajax({
+                        "headers": { "X-CSRFToken": '{{ csrf_token }}' },
+                        "type": "post",
+                        "data": {
+                            'deleteRecord': true,
+                            'reason': result.value,
+                            'recordTitle': '{{ record.title }}',
+                        },
                         "success": function(data){
                         },
                         "error": function(data){
                             alert("error");
                         }
-		    	    });
+                    });
                     Swal.fire(
-                      'Deleted!',
-                      'Your record has been deleted.',
-                      'success'
+                        "Request Sent!",
+                        "Record would be deleted automatically after the approval of an admin.",
+                        'success'
                     ).then((result) => {
                         window.location.replace("{% url 'records-pending' %}");
                     });
+                  }else{
+                    Swal.fire(
+                        'Request is not sent!',
+                        'Reason must be provided. Please provide one.',
+                        'error'
+                    )
                   }
                 })
+           //      Swal.fire({
+           //        title: 'Are you sure?',
+           //        text: "You won't be able to revert this!",
+           //        type: 'warning',
+           //        showCancelButton: true,
+           //        confirmButtonColor: '#3085d6',
+           //        cancelButtonColor: '#d33',
+           //        confirmButtonText: 'Yes, delete it!'
+           //      }).then((result) => {
+           //        if (result.value) {
+           //           $.ajax({
+		    	    // 	"headers": { "X-CSRFToken": '{{ csrf_token }}' },
+		    	    // 	"type": "post",
+           //              "success": function(data){
+           //              },
+           //              "error": function(data){
+           //                  alert("error");
+           //              }
+		    	    // });
+           //          Swal.fire(
+           //            'Deleted!',
+           //            'Your record has been deleted.',
+           //            'success'
+           //          ).then((result) => {
+           //              window.location.replace("{% url 'records-pending' %}");
+           //          });
+           //        }
+                // })
             });
 
 		    // updating tags when checkbox is clicked

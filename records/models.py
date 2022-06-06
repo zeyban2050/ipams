@@ -74,8 +74,13 @@ class Record(models.Model):
     abstract = RichTextField()
     classification = models.ForeignKey(Classification, on_delete=models.DO_NOTHING)
     psced_classification = models.ForeignKey(PSCEDClassification, on_delete=models.DO_NOTHING)
+
+    # abstract_filename and abstract_filesize is supposed to be use when there will be a cloud storage
+    # to be used in saving the files to prevent uploading the
+    # file itself to the default django storage
     abstract_filename = models.CharField(max_length=150, default='', null=True, blank=True)
     abstract_filesize = models.IntegerField(default=0, null=True, blank=True)
+
     abstract_file = models.FileField(upload_to='abstract/', default='', null=True, blank=True)
     is_ip = models.BooleanField(default=False)
     for_commercialization = models.BooleanField(default=False)
@@ -180,6 +185,9 @@ class RecordUploadStatus(models.Model):
 class RecordUpload(models.Model):
     file = models.FileField(upload_to='documents/', null=True, blank=True)
 
+    # filename is supposed to be use when there will be a cloud storage
+    # to be used in saving the files to prevent uploading the
+    # file itself to the default django storage
     filename = models.CharField(max_length=150, default='')
 
     upload = models.ForeignKey(Upload, on_delete=models.CASCADE)

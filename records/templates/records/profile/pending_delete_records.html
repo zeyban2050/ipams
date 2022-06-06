@@ -19,39 +19,10 @@
         }
 
         $(document).ready(function(){
-            $("#btn-approve-delete").on("click", function(){
-                Swal.fire({
-                  title: 'Delete record',
-                  text: "This action is irreversible! Upon approval, record will be deleted automaticaly.",
-                  type: 'warning',
-                  showCancelButton: true,
-                  confirmButtonColor: '#3085d6',
-                  cancelButtonColor: '#d33',
-                  confirmButtonText: 'Yes, delete it!'
-                }).then((result) => {
-                  if (result.value) {
-                     $.ajax({
-		    	    	"headers": { "X-CSRFToken": '{{ csrf_token }}' },
-		    	    	"type": "post",
-		    	    	"data": {"remove": "true"},
-                        "success": function(data){
-                        },
-                        "error": function(data){
-                            alert("error");
-                        }
-		    	    });
-                    Swal.fire(
-                      'Deleted!',
-                      'The request has been approved. The record has been deleted.',
-                      'success'
-                    ).then((result) => {
-                        window.location.replace("{% url 'records-pending' %}");
-                    });
-                  }
-                })
+            $("#btn-approve-delete").on("click", function(e){
+                $('#approvedRequestModal').modal('show');
             });
         });
-
 
         function onUploadTitleClick(upload_id, record_id){
             $.ajax({
@@ -97,7 +68,7 @@
 <div class="container">
     <div class="row">
         <div class="col-12" style="margin-top:30px; margin-bottom:30px">
-            <a href="{% url 'records-index' %}">Home</a> / <a href="{% url 'records-myrecords' %}">My records</a> / {{ record.title }}
+            <a href="{% url 'records-index' %}">Home</a> / <a href="{% url 'records-pending' %}">Pending records</a> / {{ record.title }}
         </div>
     </div>
     <div class="row">
@@ -297,4 +268,30 @@
         </div>
     </div>
 </div>
+
+<!-- Delete Request -->    
+<div class="modal fade" id="approvedRequestModal" tabindex="-1" role="dialog" aria-labelledby="approvedRequestModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form method="post" id="approvedRequestForm">
+            {% csrf_token %}
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="approvedRequestLabel">Delete Record</h5>
+                <input type="hidden" name="record_number" value="{{ record.pk }}">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                This action is irreversible! Upon approval, record will be deleted automaticaly.
+              </div>
+              <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" id="approvedRequestBtn" name="approvedRequestBtn">Approve</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+              </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 {% endblock %}

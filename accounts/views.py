@@ -318,14 +318,14 @@ def get_pending_count(request):
             ktto_include = CheckedRecord.objects.select_related('record').filter(status='approved', checked_by__in=Subquery(User.objects.filter(role=3).values('pk')))
             # rows = Record.objects.filter(pk__in=Subquery(ktto_include.values('record'))).exclude(pk__in=Subquery(ktto_exclude.values('record'))).values('pk', 'title')
             new_record_rows = Record.objects.filter(pk__in=Subquery(ktto_include.values('record'))).exclude(pk__in=Subquery(ktto_exclude.values('record'))).values('pk', 'title')
-            delete_request_rows = UserRecord.objects.filter(is_marked=True)
+            delete_request_rows = Record.objects.filter(is_marked=True)
 
         elif request.user.role.id == 5:
             rdco_exclude = CheckedRecord.objects.select_related('record').filter(checked_by__in=Subquery(User.objects.filter(role=5).values('pk')))
             rdco_include = CheckedRecord.objects.select_related('record').filter(Q(checked_by__in=Subquery(User.objects.filter(role=4).values('pk'))) | Q(checked_by__in=Subquery(User.objects.filter(role=7).values('pk'))), status='approved')
             # rows = Record.objects.filter(pk__in=Subquery(rdco_include.values('record'))).exclude(pk__in=Subquery(rdco_exclude.values('record'))).values('pk','title')
             new_record_rows = Record.objects.filter(pk__in=Subquery(rdco_include.values('record'))).exclude(pk__in=Subquery(rdco_exclude.values('record'))).values('pk','title')
-            delete_request_rows = UserRecord.objects.filter(is_marked=True)
+            delete_request_rows = Record.objects.filter(is_marked=True)
 
         return JsonResponse({"pending-count": len(new_record_rows) + len(delete_request_rows)})
 

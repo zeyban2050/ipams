@@ -33,7 +33,7 @@ urlpatterns = [
 
     path('lockout', views.LockoutPage.as_view(), name='lockout-page'),
     path('dashboard/reset/accounts', views.LockedAccountsView.as_view(), name='reset-accounts'),
-    path('all/delete/requests', views.get_all_delete_requests, name="all-delete-requests"),
+    path('delete/requests', views.get_all_delete_requests, name="all-delete-requests"),
     path('record/pending/delete/request/<int:record_id>', views.PendingDeleteRecordsView.as_view(), name='pending-delete-view'),
 ]
 

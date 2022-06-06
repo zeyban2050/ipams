@@ -676,11 +676,21 @@ class PendingRecordView(View):
     def post(self, request, record_id):
         if is_ajax(request=request):
             # removing record
-            if request.POST.get('remove', 'false') == 'true':
-                del_record = Record.objects.get(pk=record_id)
-                del_record.abstract_file.delete()
-                del_record.delete()
+            if request.POST.get('deleteRecord', 'false') == 'true':
+                reason = request.POST.get('reason')
+                recordTitle = request.POST.get('recordTitle')
+                record = Record.objects.get(title=recordTitle)
+                record.is_marked = True
+                record.reason = reason
+                record.save()
+                deleteRecord(request, request.user.id, record.pk, reason)
                 return JsonResponse({'success': True})
+            # if request.POST.get('remove', 'false') == 'true':
+            #     del_record = Record.objects.get(pk=record_id)
+            #     del_record.abstract_file.delete()
+            #     del_record.delete()
+            #     return JsonResponse({'success': True})
+
             # updating record tags
             elif request.POST.get('tags_update', 'false') == 'true':
                 return JsonResponse(update_record_tags(request, record_id))
@@ -738,6 +748,19 @@ class PendingRecordView(View):
                     print('invalid form')
                 return redirect('records-pending')
 
+# display all delete record requests to table
+def get_all_delete_requests(request):
+    if request.method == 'POST':
+        data = []
+        delete_pendings = Record.objects.filter(is_marked=True)
+        for record in delete_pendings:
+            data.append([
+                record.pk,
+                f'<a href="/record/pending/delete/request/{record.pk}">{record.title}</a>',
+                record.reason,
+            ])
+
+        return JsonResponse({'data': data})
 
 # template view when selecting from pending delete requests table
 class PendingDeleteRecordsView(View):
@@ -784,21 +807,31 @@ class PendingDeleteRecordsView(View):
         self.context['record'] = Record.objects.get(pk=record_id)
         self.context['is_owner'] = is_owner
         self.context['is_removable'] = is_removable
-        self.context['reason'] = UserRecord.objects.get(record=Record.objects.get(pk=record_id)).reason
+        self.context['reason'] = Record.objects.get(pk=record_id).reason
+        self.context['delete_request'] = Record.objects.filter(is_marked=True)
         return render(request, self.name, self.context)
 
     def post(self, request, record_id):
-        if is_ajax(request=request):
+        if request.method == 'POST':
             # removing record
-            if request.POST.get('remove', 'false') == 'true':
+            if 'approvedRequestBtn' in request.POST:
+                record_id = request.POST.get('record_number')
                 del_record = Record.objects.get(pk=record_id)
                 user_record = UserRecord.objects.get(record=Record.objects.get(pk=record_id))
                 del_record.abstract_file.delete()
-                approvedDeleteRecord(request, request.user.id, record_id, user_record.user.pk, user_record.reason)
+                del_record_uploads = RecordUpload.objects.filter(record=del_record)
+                for del_record_upload in del_record_uploads:
+                    del_record_upload.file.delete()
+                approvedDeleteRecord(request, request.user.id, record_id, user_record.user.pk, del_record.reason)
                 del_record.delete()
-                return JsonResponse({'success': True})
+                return redirect("records-pending")
+            else:
+                messages.error(request, 'Error encountered while approving record')
+                return redirect("records-pending")
+
+        if is_ajax(request=request):
             # get uploaded document data
-            elif request.POST.get('get_document', 'false') == 'true':
+            if request.POST.get('get_document', 'false') == 'true':
                 upload = Upload.objects.get(pk=request.POST.get('upload_id', 0))
                 record = Record.objects.get(pk=request.POST.get('record_id', 0))
                 record_upload = RecordUpload.objects.filter(upload=upload, record=record).first()
@@ -896,13 +929,11 @@ class MyRecordView(View):
             # removing record
             if request.POST.get('deleteRecord', 'false') == 'true':
                 reason = request.POST.get('reason')
-                print(reason)
                 recordTitle = request.POST.get('recordTitle')
-                print(recordTitle)
                 record = Record.objects.get(title=recordTitle)
-                print(record.title)
-                user_record = UserRecord.objects.filter(record=record.pk).update(is_marked=True, reason=reason)
-                print(user_record)
+                record.is_marked = True
+                record.reason = reason
+                record.save()
                 deleteRecord(request, request.user.id, record.pk, reason)
                 return JsonResponse({'success': True})
                 
@@ -1278,8 +1309,8 @@ class Add(View):
                 record.representative = f'{request.user.first_name} {request.user.last_name}'
 
                 if file is not None:
-                    record.abstract_filesize = file.size
-                    record.abstract_filename = file.name
+                    record.abstract_filesize = record.abstract_file.size
+                    record.abstract_filename = record.abstract_file.name
                     # upload_blob(settings.GS_BUCKET_NAME, record.abstract_file, record.abstract_file.name)
                     # record.abstract_file = None
 
@@ -1423,8 +1454,8 @@ class AddResearch(View):
                 record.record_type = RecordType.objects.get(pk=2)
 
                 if file is not None:
-                    record.abstract_filesize = file.size
-                    record.abstract_filename = file.name
+                    record.abstract_filesize = record.abstract_file.size
+                    record.abstract_filename = record.abstract_file.name
                     # upload_blob(settings.GS_BUCKET_NAME, record.abstract_file, record.abstract_file.name)
                     # record.abstract_file = None
 
@@ -1844,6 +1875,7 @@ class MyRecordsView(View):
         user_records = UserRecord.objects.filter(user=request.user)
         data = []
         for user_record in user_records:
+            record = Record.objects.get(title=user_record.record)
             adviser_checked = f'<div class="badge badge-secondary">pending</div>'
             ktto_checked = f'<div class="badge badge-secondary">pending</div>'
             rdco_checked = f'<div class="badge badge-secondary">pending</div>'
@@ -1861,19 +1893,19 @@ class MyRecordsView(View):
                     ktto_checked = record_status
                 elif checked_record.checked_by.role.pk == 5:
                     rdco_checked = record_status
-            if user_record.is_marked == False:
+            if record.is_marked == False:
                 data.append([
-                    user_record.record.pk,
+                    record.pk,
                     '<a href="/record/myrecords/' + str(
-                        user_record.record.pk) + '">' + user_record.record.title + '</a>',
+                        record.pk) + '">' + record.title + '</a>',
                     adviser_checked,
                     ktto_checked,
                     rdco_checked,
                 ])
-            elif user_record.is_marked == True:
+            elif record.is_marked == True:
                  data.append([
-                    user_record.record.pk,
-                    user_record.record.title + ' <i class="fa fa-ban" aria-hidden="true" title="Marked for deletion"></i>',
+                    record.pk,
+                    record.title + ' <i class="fa fa-ban" aria-hidden="true" title="Marked for deletion"></i>',
                     adviser_checked,
                     ktto_checked,
                     rdco_checked,
@@ -1905,62 +1937,41 @@ class PendingRecordsView(View):
         elif request.user.role.id == 4 or request.user.role.id == 7:
             ktto_exclude = CheckedRecord.objects.select_related('record').filter(Q(checked_by__in=Subquery(User.objects.filter(role=4).values('pk'))) | Q(checked_by__in=Subquery(User.objects.filter(role=7).values('pk'))))
             ktto_include = CheckedRecord.objects.select_related('record').filter(status='approved', checked_by__in=Subquery(User.objects.filter(role=3).values('pk')))
-            ktto_pending_records = Record.objects.filter(pk__in=Subquery(ktto_include.values('record'))).exclude(pk__in=Subquery(ktto_exclude.values('record'))).values('pk', 'title')
+            ktto_pending_records = Record.objects.filter(pk__in=Subquery(ktto_include.values('record'))).exclude(pk__in=Subquery(ktto_exclude.values('record'))).values('pk', 'title', 'is_marked')
             tuples_ktto_pending_records = [tuple(k.values()) for k in ktto_pending_records]
 
             data = []
             for row in tuples_ktto_pending_records:
-                data.append([
-                    row[0],
-                    f'<a href="/record/pending/{row[0]}">{row[1]}</a>'
-                ])
+                if row[2] == False:
+                    data.append([
+                        row[0],
+                        f'<a href="/record/pending/{row[0]}">{row[1]}</a>'
+                    ])
+                else:
+                    data.append([
+                        row[0],
+                        row[1] + ' <i class="fa fa-ban" aria-hidden="true" title="Marked for deletion"></i>'
+                    ])
         elif request.user.role.id == 5:
             rdco_exclude = CheckedRecord.objects.select_related('record').filter(checked_by__in=Subquery(User.objects.filter(role=5).values('pk')))
             rdco_include = CheckedRecord.objects.select_related('record').filter(Q(checked_by__in=Subquery(User.objects.filter(role=4).values('pk'))) | Q(checked_by__in=Subquery(User.objects.filter(role=7).values('pk'))), status='approved')
-            rdco_pending_records = Record.objects.filter(pk__in=Subquery(rdco_include.values('record'))).exclude(pk__in=Subquery(rdco_exclude.values('record'))).values('pk','title')
+            rdco_pending_records = Record.objects.filter(pk__in=Subquery(rdco_include.values('record'))).exclude(pk__in=Subquery(rdco_exclude.values('record'))).values('pk','title', 'is_marked')
             tuples_rdco_pending_records = [tuple(r.values()) for r in rdco_pending_records]
 
             data = []
             for row in tuples_rdco_pending_records:
-                data.append([
-                    row[0],
-                    f'<a href="/record/pending/{row[0]}">{row[1]}</a>'
-                ])
+                if row[2] == False:
+                    data.append([
+                        row[0],
+                        f'<a href="/record/pending/{row[0]}">{row[1]}</a>'
+                    ])
+                else:
+                    data.append([
+                        row[0],
+                        row[1] + ' <i class="fa fa-ban" aria-hidden="true" title="Marked for deletion"></i>'
+                    ])
         return JsonResponse({ "data": data })
 
-def get_all_delete_requests(request):
-    if request.method == 'POST':
-        if request.user.role.id == 4 or request.user.role.id == 7:
-            delete_request_data = []
-            user_record_marked = UserRecord.objects.filter(is_marked=True)
-            ktto_delete_pendings = Record.objects.filter(pk__in=Subquery(user_record_marked.values('record'))).values('pk', 'title')
-            tuples_ktto_delete_pendings = [tuple(k.values()) for k in ktto_delete_pendings]
-
-            tuples_record_marked = [tuple(rm.values()) for rm in user_record_marked.values('reason')]
-            merged_tuples = [(tuples_ktto_delete_pendings[i], tuples_record_marked[i]) for i in range(0, len(tuples_ktto_delete_pendings))]
-
-            for row in merged_tuples:
-                delete_request_data.append([
-                    row[0][0],
-                    f'<a href="/record/pending/delete/request/{row[0][0]}">{row[0][1]}</a>',
-                    row[1],
-                ])
-        elif request.user.role.id == 5:
-            delete_request_data = []
-            user_record_marked = UserRecord.objects.filter(is_marked=True)
-            rdco_delete_pendings = Record.objects.filter(pk__in=Subquery(user_record_marked.values('record'))).values('pk', 'title')
-            tuples_rdco_delete_pendings = [tuple(k.values()) for k in rdco_delete_pendings]
-
-            tuples_record_marked = [tuple(rm.values()) for rm in user_record_marked.values('reason')]
-            merged_tuples = [(tuples_rdco_delete_pendings[i], tuples_record_marked[i]) for i in range(0, len(tuples_rdco_delete_pendings))]
-            
-            for row in merged_tuples:
-                delete_request_data.append([
-                    row[0][0],
-                    f'<a href="/record/pending/delete/request/{row[0][0]}">{row[0][1]}</a>',
-                    row[1],
-                ])
-        return JsonResponse({ "data": delete_request_data })
 
 class ApprovedRecordsView(View):
     template_name = 'records/profile/approved_records.html'
