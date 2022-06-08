@@ -72,6 +72,26 @@ def notificationDisplay(request, notification, category):
                 'recordID': notifications[0].record.id,
                 'authors': listOfAuthors(request, notifications[0].record.id)
             }
+        elif notifications[0].notif_type.name == 'Request to Delete Record':
+            context = {
+                'notifications': notifications,
+                'category': category,
+            }
+        elif notifications[0].notif_type.name == 'Approved Request to Delete Record':
+            context = {
+                'notifications': notifications,
+                'category': category,
+            }
+        elif notifications[0].notif_type.name == 'Request to Download Abstract':
+            context = {
+                'notifications': notifications,
+                'category': category,
+            }
+        elif notifications[0].notif_type.name == 'Approved Request to Download Abstract':
+            context = {
+                'notifications': notifications,
+                'category': category,
+            }
     return context
 
 # filter notifications
@@ -122,6 +142,14 @@ def notificationContent(request, id, notifications):
                             'psced': notif.record.psced_classification.name,
                             'recordID': notif.record.id,
                             'authors': listOfAuthors(request, notif.record.id)})
+    elif notifications[0].notif_type.name == 'Request to Delete Record':
+        return JsonResponse({ 'success': True })
+    elif notifications[0].notif_type.name == 'Approved Request to Delete Record':
+        return JsonResponse({ 'success': True })
+    elif notifications[0].notif_type.name == 'Request to Download Abstract':
+        return JsonResponse({ 'success': True })
+    elif notifications[0].notif_type.name == 'Approved Request to Download Abstract':
+        return JsonResponse({ 'success': True })
 
 def notificationDisplayStudent(request, notification, category):
     notifications = notification
@@ -160,6 +188,16 @@ def notificationDisplayStudent(request, notification, category):
                 'request': "Role Request Student",
                 'subject_body': notifications[0].notif_type.name+' by '+notifications[0].user.first_name+notifications[0].user.last_name,
                 'approved_by': notifications[0].user.first_name+' '+notifications[0].user.last_name
+            }
+        elif notifications[0].notif_type.name == 'Approved Request to Delete Record':
+            context = {
+                'notifications': notifications,
+                'category': category,
+            }
+        elif notifications[0].notif_type.name == 'Approved Request to Download Abstract':
+            context = {
+                'notifications': notifications,
+                'category': category,
             }
     return context
 

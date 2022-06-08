@@ -341,7 +341,7 @@ def approvedDeleteRecord(request, userID, recordID, recipientID, reason):
 	record = Record.objects.get(pk=recordID)
 	recipient = User.objects.get(pk=recipientID) #the user who requested for approval to delete a record
 
-	notification = Notification(user=user, role=user.role, recipient=recipient, 
+	notification = Notification(user=user, role=user.role, recipient=recipient, record=record,
 		notif_type=NotificationType.objects.get(pk=11), to_ktto=True, to_rdco=True, is_read=False, date_created=dt.now())
 
 	notification.save()
@@ -379,3 +379,88 @@ def approvedDeleteRecord(request, userID, recordID, recipientID, reason):
 	    [to_email],
 	    fail_silently=False
 	)
+
+
+def sendDownloadRequest(request, userID, recordID):
+	user = User.objects.get(pk=userID) # the user who sent a request
+	record = Record.objects.get(pk=recordID)
+	
+	if user.role.name == 'Student':
+		course = Student.objects.get(user=user.id).course.name
+		role = UserRole.objects.get(pk=2)
+	if user.role.name == 'Adviser':
+		course = ''
+		role = UserRole.objects.get(pk=3)
+	if user.role.name == 'KTTO':
+		course = ''
+		role = UserRole.objects.get(pk=4)
+	if user.role.name == 'RDCO':
+		course = ''
+		role = UserRole.objects.get(pk=5)
+	if user.role.name == 'TBI':
+		course = ''
+		role = UserRole.objects.get(pk=7)
+
+	notification = Notification(user=user, course=course, role=role, record=record, notif_type=NotificationType.objects.get(pk=12), 
+		to_ktto=True, to_rdco=True, is_read=False, date_created=dt.now())
+	
+	notification.save()
+	
+	url = request.build_absolute_uri()
+	base_url = url.split("record/")
+	redirect_path = base_url[0] + 'records/pending/'
+
+	kr_accounts = User.objects.filter(Q(role__in=Subquery(UserRole.objects.filter(pk=5).values('pk'))) | Q(role__in=Subquery(UserRole.objects.filter(pk=4).values('pk'))))
+
+	mail_subject = NotificationType.objects.get(pk=10)
+	message = (
+		f'{user.first_name} {user.last_name} has sent a request to download record {record.title}' \
+		f' with a classification of {record.classification} and a PSCED classification of' \
+		f' {record.psced_classification}.' \
+		f'\nTo approve the request, login to the website and go to {redirect_path}'
+	)
+	
+	messages_to_send = [(mail_subject, message, settings.EMAIL_HOST_USER, [account.email]) for account in kr_accounts]
+	send_mass_mail(messages_to_send)
+
+
+def approvedDownloadRequest(request, userID, recordID, recipientID):
+	user = User.objects.get(pk=userID) # the admin who approved the request
+	record = Record.objects.get(pk=recordID)
+	recipient = User.objects.get(pk=recipientID) #the user who requested for approval to delete a record
+
+	notification = Notification(user=user, role=user.role, recipient=recipient, record=record,
+		notif_type=NotificationType.objects.get(pk=13), to_ktto=True, to_rdco=True, is_read=False, date_created=dt.now())
+
+	notification.save()
+
+	url = request.build_absolute_uri()
+	base_url = url.split("record/")
+	redirect_path = base_url[0] + 'records/pending/'
+
+	# to admins who would approved the request
+	kr_accounts = User.objects.filter(Q(role__in=Subquery(UserRole.objects.filter(pk=5).values('pk'))) | Q(role__in=Subquery(UserRole.objects.filter(pk=4).values('pk'))))
+
+	mail_subject = NotificationType.objects.get(pk=13)
+	message = (
+		f'{user.first_name} {user.last_name} has approved the request of {recipient.first_name} {recipient.last_name} to download the record {record.title}' \
+		f'\nTo approve other requests, login to the website {redirect_path}'
+	)
+	
+	messages_to_send = [(mail_subject, message, settings.EMAIL_HOST_USER, [account.email]) for account in kr_accounts]
+	send_mass_mail(messages_to_send) 
+
+	# for whoever sent the request that got approved
+	message = (
+		f'{user.first_name} {user.last_name} has approved your request to download the record {record.title}' \
+		f'\nFor more information, login to the website {redirect_path}'
+	)
+	to_email = recipient.email
+	send_mail(
+	    mail_subject, 
+	    message, 
+	    settings.EMAIL_HOST_USER, 
+	    [to_email],
+	    fail_silently=False
+	)
+

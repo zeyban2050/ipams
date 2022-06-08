@@ -208,3 +208,12 @@ class CheckedUpload(models.Model):
 
     def __str__(self):
         return self.checked_by.username
+
+
+class RecordDownloadRequest(models.Model):
+    sent_by = models.ForeignKey('accounts.User', on_delete=models.CASCADE, null=True)
+    record = models.ForeignKey(Record, on_delete=models.CASCADE)
+    date_created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.sent_by.username

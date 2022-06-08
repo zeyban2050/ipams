@@ -17,7 +17,7 @@ from ipams import settings
 from .forms import CheckedRecordForm
 from .models import Record, AuthorRole, Classification, PSCEDClassification, ConferenceLevel, BudgetType, \
     CollaborationType, Author, Conference, PublicationLevel, Publication, Budget, Collaboration, CheckedRecord, Upload, \
-    RecordUpload, RecordType, ResearchRecord, CheckedUpload, RecordUploadStatus
+    RecordUpload, RecordType, ResearchRecord, CheckedUpload, RecordUploadStatus, RecordDownloadRequest
 from django.shortcuts import redirect
 from pyexcel_xls import get_data as xls_get
 from pyexcel_xlsx import get_data as xlsx_get
@@ -576,6 +576,17 @@ class ViewRecord(View):
             # updating record tags
             if request.POST.get('tags_update', 'false') == 'true':
                 return JsonResponse(update_record_tags(request, record_id))
+
+            # send download request
+            if request.POST.get('sendRequest'):
+                record_id = request.POST.get('recordId')
+                user_id = request.POST.get('userId')
+                download_request = RecordDownloadRequest(sent_by=User.objects.get(pk=user_id), record=Record.objects.get(pk=record_id))
+                download_request.save()
+                sendDownloadRequest(request, request.user.id, record_id)
+                return JsonResponse({'success': True})
+
+
             # get uploaded document data
             elif request.POST.get('get_document', 'false') == 'true':
                 upload = Upload.objects.get(pk=request.POST.get('upload_id', 0))
@@ -2524,3 +2535,18 @@ class LockedAccountsView(View):
                 for account in accounts:
                     reset(username=account)
                 return JsonResponse({'success': True})
+
+
+def get_all_download_requests(request):
+    if request.method == 'POST':
+        data = []
+        download_requests = RecordDownloadRequest.objects.all()
+        for record in download_requests:
+            data.append([
+                record.record.pk,
+                '',
+                f'<a href="/record/pending/delete/request/{record.record.pk}">{record.record.title}</a>',
+                record.sent_by.username
+            ])
+
+        return JsonResponse({'data': data})

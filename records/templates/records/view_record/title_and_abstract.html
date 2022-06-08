@@ -32,8 +32,9 @@
             {% if record.abstract_filename and user.role.id > 1 %}
             <div class="row">
                 <div class="col-12">
-                    <a href="{% url 'records-download-abstract' record_id=record.pk %}">Download abstract</a>
+                    <a href="#" class="download">Download abstract</a>
                     <label> size: {{ record.abstract_filesize|filesizeformat }}</label>
                 </div>
             </div>
             {% endif %}
+

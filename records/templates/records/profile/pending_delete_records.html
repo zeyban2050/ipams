@@ -18,10 +18,10 @@
             }
         }
 
-        $(document).ready(function(){
-            $("#btn-approve-delete").on("click", function(e){
-                $('#approvedRequestModal').modal('show');
-            });
+        $("#btn-approve-delete").on("click", function(e){
+            let elements = document.getElementsByClassName("record");
+            elements[0].value = "{{ record.pk }}";
+            $('#approvedRequestModal').modal('show');
         });
 
         function onUploadTitleClick(upload_id, record_id){
@@ -269,15 +269,15 @@
     </div>
 </div>
 
-<!-- Delete Request -->    
+<!------------------------------------- Delete Request ------------------------------------>    
 <div class="modal fade" id="approvedRequestModal" tabindex="-1" role="dialog" aria-labelledby="approvedRequestModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
-        <form method="post" id="approvedRequestForm">
+        <form method="post">
             {% csrf_token %}
             <div class="modal-content">
               <div class="modal-header">
                 <h5 class="modal-title" id="approvedRequestLabel">Delete Record</h5>
-                <input type="hidden" name="record_number" value="{{ record.pk }}">
+                <input type="hidden" name="record_number" class="record">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                   <span aria-hidden="true">&times;</span>
                 </button>

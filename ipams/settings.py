@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django_extensions',
     'axes',
     # 'channels',
+    "sslserver",
 ]
 
 MIDDLEWARE = [
@@ -188,8 +189,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 EMAIL_HOST_USER = 'ipamsdevteam22@gmail.com' 
 EMAIL_HOST_PASSWORD = 'fxmdxdbactlknwia'
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  
- 
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # Channels
 # ASGI_APPLICATION = 'ipams.asgi.application'

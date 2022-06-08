@@ -22,5 +22,6 @@ all_models = [
     models.RecordUpload,
     models.RecordUploadStatus,
     models.CheckedUpload,
+    models.RecordDownloadRequest,
 ]
 admin.site.register(all_models)

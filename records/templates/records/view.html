@@ -244,10 +244,45 @@
             });
         }
 
-
         $("#btn-uploads-back").on("click", function(){
             $("#uploads").show();
             $("#uploads-title").hide();
+        });
+
+        $(".download").on("click", function(){
+            Swal.fire({
+              title: 'Send Request to Download Abstract',
+              text: "To download abstract of {{ record.title }} please click Send Request button to ask for permission. Once approved you will be notified through your email account.",
+              type: 'info',
+              showCancelButton: true,
+              confirmButtonColor: '#3085d6',
+              cancelButtonColor: '#d33',
+              confirmButtonText: 'Send Request'
+            }).then((result) => {
+              if (result.value) {
+                $.ajax({
+                    "headers": { "X-CSRFToken": '{{ csrf_token }}' },
+                    "type": "post",
+                    "data": {
+                        sendRequest: true,
+                        recordId: '{{ record.pk }}',
+                        userId: '{{ user.pk }}'
+                    },
+                    "success": function(data){
+                    },
+                    "error": function(data){
+                        alert("error");
+                    }
+                });
+                Swal.fire(
+                    "Request Sent!",
+                    "Record would be deleted automatically after the approval of an admin.",
+                    'success'
+                ).then((result) => {
+                    window.location.reload();
+                });
+              }else{}
+            })
         });
 	</script>
 {% endblock %}
