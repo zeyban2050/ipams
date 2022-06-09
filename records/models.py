@@ -213,6 +213,7 @@ class CheckedUpload(models.Model):
 class RecordDownloadRequest(models.Model):
     sent_by = models.ForeignKey('accounts.User', on_delete=models.CASCADE, null=True)
     record = models.ForeignKey(Record, on_delete=models.CASCADE)
+    is_marked = models.BooleanField(default=False) # if request is approved
     date_created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

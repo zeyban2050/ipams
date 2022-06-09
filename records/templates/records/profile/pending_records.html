@@ -33,7 +33,6 @@
                 },
                 // When deferred rendering is enabled, rather than having DataTables create all TR and TD nodes required for the table when the data is loaded, DataTables will only create the nodes required for each individual row at the time of that row being drawn on the page (these nodes are then retained in case they are needed again so they aren't created multiple times). This can give a significant performance increase, since a lot less work is done at initialisation time.
                 "deferRender": true,
-                "scrollX": true,
                 "responsive": true,
                 "columnDefs": [
                     {
@@ -54,7 +53,6 @@
                 },
                 // When deferred rendering is enabled, rather than having DataTables create all TR and TD nodes required for the table when the data is loaded, DataTables will only create the nodes required for each individual row at the time of that row being drawn on the page (these nodes are then retained in case they are needed again so they aren't created multiple times). This can give a significant performance increase, since a lot less work is done at initialisation time.
                 "deferRender": true,
-                "scrollX": true,
                 "responsive": true,
                 "columnDefs": [
                     {
@@ -78,7 +76,22 @@
             else{
                 $("#modal-tags").hide();
             }
-        }  
+        }
+        
+        function getModalId(id, user){
+            let recs = document.getElementsByClassName("record");
+            const linkId = id.split("-");
+            recs[0].value = linkId[linkId.length - 1];
+
+            const _class = user.split("-");
+            let users = document.getElementsByClassName("user");
+            users[0].value = _class[0];
+
+            let reqs = document.getElementsByClassName("request");
+            reqs[0].value = _class[1];
+        }
+
+        console.log($('a[data-toggle="tab"]'));
 
     </script>
 {% endblock %}
@@ -180,7 +193,7 @@
                                     <th></th>
                                     <th>RESEARCH TITLE</th>
                                     <th>REQUEST BY</th>
-                                                    
+                                    <th>APPRROVE</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -273,5 +286,32 @@
 	       	</div>
 	     </div>
 	</div>
+
+    <!------------------------------------- Download Request ------------------------------------>    
+    <div class="modal fade" id="approvedDownloadModal" tabindex="-1" role="dialog" aria-labelledby="approvedDownloadModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <form method="post" action="{% url 'download-request' %}">
+                {% csrf_token %}
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="approvedDownloadLabel">Approve Request to Download</h5>
+                    <input type="hidden" name="record_number" class="record">
+                    <input type="hidden" name="username" class="user">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    Approve the user to download abstract.
+                  </div>
+                  <div class="modal-footer">
+                    <input type="hidden" name="request_id" class="request">
+                    <button type="submit" class="btn btn-primary" id="approvedDownloadBtn" name="approvedDownloadBtn">Approve</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                  </div>
+                </div>
+            </form>
+        </div>
+    </div>
 
 {% endblock %}

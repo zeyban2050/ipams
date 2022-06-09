@@ -433,27 +433,28 @@ def approvedDownloadRequest(request, userID, recordID, recipientID):
 		notif_type=NotificationType.objects.get(pk=13), to_ktto=True, to_rdco=True, is_read=False, date_created=dt.now())
 
 	notification.save()
-
-	url = request.build_absolute_uri()
-	base_url = url.split("record/")
-	redirect_path = base_url[0] + 'records/pending/'
-
-	# to admins who would approved the request
-	kr_accounts = User.objects.filter(Q(role__in=Subquery(UserRole.objects.filter(pk=5).values('pk'))) | Q(role__in=Subquery(UserRole.objects.filter(pk=4).values('pk'))))
-
-	mail_subject = NotificationType.objects.get(pk=13)
-	message = (
-		f'{user.first_name} {user.last_name} has approved the request of {recipient.first_name} {recipient.last_name} to download the record {record.title}' \
-		f'\nTo approve other requests, login to the website {redirect_path}'
-	)
 	
-	messages_to_send = [(mail_subject, message, settings.EMAIL_HOST_USER, [account.email]) for account in kr_accounts]
-	send_mass_mail(messages_to_send) 
+	mail_subject = NotificationType.objects.get(pk=13)
+	
+	url = request.build_absolute_uri()
+	# base_url = url.split("approved/")
+	# redirect_path = base_url[0] + 'records/pending/'
+	# # to admins who would approved the request
+	# kr_accounts = User.objects.filter(Q(role__in=Subquery(UserRole.objects.filter(pk=5).values('pk'))) | Q(role__in=Subquery(UserRole.objects.filter(pk=4).values('pk'))))
+	# message = (
+	# 	f'{user.first_name} {user.last_name} has approved the request of {recipient.first_name} {recipient.last_name} to download the record {record.title}' \
+	# 	f'\nTo approve other requests, login to the website {redirect_path}'
+	# )
+	# messages_to_send = [(mail_subject, message, settings.EMAIL_HOST_USER, [account.email]) for account in kr_accounts]
+	# send_mass_mail(messages_to_send) 
+
+	base_url = url.split("approved/")
+	redirect_path_download = base_url[0] + 'download/abstract/' + recordID
 
 	# for whoever sent the request that got approved
 	message = (
 		f'{user.first_name} {user.last_name} has approved your request to download the record {record.title}' \
-		f'\nFor more information, login to the website {redirect_path}'
+		f'\nClick the link and the download will start automatically. {redirect_path_download}'
 	)
 	to_email = recipient.email
 	send_mail(

@@ -2540,13 +2540,32 @@ class LockedAccountsView(View):
 def get_all_download_requests(request):
     if request.method == 'POST':
         data = []
-        download_requests = RecordDownloadRequest.objects.all()
+        download_requests = RecordDownloadRequest.objects.filter(is_marked=False)
         for record in download_requests:
             data.append([
-                record.record.pk,
+                record.pk,
                 '',
-                f'<a href="/record/pending/delete/request/{record.record.pk}">{record.record.title}</a>',
-                record.sent_by.username
+                record.record.title,
+                record.sent_by.username,
+                f'<div><a href="#" data-toggle="modal" data-target="#approvedDownloadModal" class="{record.sent_by.username}-{record.pk}" id="approve-btn-{record.record.pk}" onclick="return getModalId(this.id, this.className);"> Approve </a></div>'
             ])
 
         return JsonResponse({'data': data})
+
+
+def approved_download_requests(request):
+    if request.method == 'POST':
+        if 'approvedDownloadBtn' in request.POST:
+            record_id = request.POST.get('record_number')
+            username = request.POST.get('username')
+            request_id = request.POST.get('request_id')
+            user = User.objects.get(username=username)
+            download_request = RecordDownloadRequest.objects.get(pk=request_id)
+            download_request.is_marked = True
+            download_request.save()
+            
+            approvedDownloadRequest(request, request.user.id, record_id, user.id)
+            return redirect("records-pending")
+        else:
+            messages.error(request, 'Error encountered while approving request')
+            return redirect("records-pending")

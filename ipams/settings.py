@@ -202,3 +202,5 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 #     },
 # }
 
+
+CSRF_TRUSTED_ORIGINS = ['https://*.ap.ngrok.io/']
