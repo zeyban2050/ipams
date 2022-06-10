@@ -449,7 +449,10 @@ def approvedDownloadRequest(request, userID, recordID, recipientID):
 	base_url = url.split("approved/")
 	http_cut = base_url[0].split("//")
 	# redirect_path_download = base_url[0] + 'download/abstract/' + recordID
-	redirect_path_download = 'https://' + http_cut[1] + 'download/abstract/' + recordID
+	if http_cut[0] == 'http':
+		redirect_path_download = 'http://' + http_cut[1] + 'download/abstract/' + recordID
+	elif http_cut[0] == 'https':
+		redirect_path_download = 'https://' + http_cut[1] + 'download/abstract/' + recordID
 
 	# for whoever sent the request that got approved
 	message = (
