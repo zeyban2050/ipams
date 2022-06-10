@@ -449,7 +449,9 @@ def approvedDownloadRequest(request, userID, recordID, recipientID):
 	# send_mass_mail(messages_to_send) 
 
 	base_url = url.split("approved/")
-	redirect_path_download = base_url[0] + 'download/abstract/' + recordID
+	http_cut = base_url[0].split("//")
+	# redirect_path_download = base_url[0] + 'download/abstract/' + recordID
+	redirect_path_download = 'https://' + http_cut[1] + 'download/abstract/' + recordID
 
 	# for whoever sent the request that got approved
 	message = (
