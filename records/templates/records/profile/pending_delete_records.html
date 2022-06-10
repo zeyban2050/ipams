@@ -24,6 +24,10 @@
             $('#approvedRequestModal').modal('show');
         });
 
+        $("#approvedRequestBtn").on("click",function(){
+            $('#loadIndicator').html('<div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>');
+        });        
+
         function onUploadTitleClick(upload_id, record_id){
             $.ajax({
 				headers: { "X-CSRFToken": '{{ csrf_token }}' },
@@ -285,6 +289,7 @@
               <div class="modal-body">
                 This action is irreversible! Upon approval, record will be deleted automaticaly.
               </div>
+              <div id="loadIndicator"></div>
               <div class="modal-footer">
                 <button type="submit" class="btn btn-primary" id="approvedRequestBtn" name="approvedRequestBtn">Approve</button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>

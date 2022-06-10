@@ -41,7 +41,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 	first_name = models.CharField(max_length=50)
 	middle_name = models.CharField(max_length=50, default='', blank=True)
 	last_name = models.CharField(max_length=50)
-	email = models.CharField(max_length=30, unique=True)
+	email = models.CharField(max_length=60, unique=True)
 	contact_no = models.CharField(max_length=20, blank=True)
 	role = models.ForeignKey(UserRole, on_delete=models.CASCADE, default=7)
 	is_admin = models.BooleanField(default=False)

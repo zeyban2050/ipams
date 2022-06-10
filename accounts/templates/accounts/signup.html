@@ -101,6 +101,10 @@
             $("#btn-submit-signUp").hide();
         }
     });
+
+    $("#btn-submit-signUp").on("click",function(){
+        $('#loadIndicator').html('<div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>');
+    });
 </script>
 {% endblock %}
 
@@ -214,6 +218,7 @@
                     </div>                
                 </div>
                 <br>
+                <div id="loadIndicator"></div>
                 <div class="row">
                     <div class="col-12 d-flex justify-content-end align-items-center" style="margin-bottom:50px">
                         <a href="{% url 'records-index' %}" style="margin-right:10px" class="btn base-btn base-bg-primary">Back</a>

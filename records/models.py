@@ -81,7 +81,7 @@ class Record(models.Model):
     abstract_filename = models.CharField(max_length=150, default='', null=True, blank=True)
     abstract_filesize = models.IntegerField(default=0, null=True, blank=True)
 
-    abstract_file = models.FileField(upload_to='abstract/', default='', null=True, blank=True)
+    abstract_file = models.FileField(upload_to='abstract/', default='', null=True, blank=True)  # WHOLE RESEARCH PAPER
     is_ip = models.BooleanField(default=False)
     for_commercialization = models.BooleanField(default=False)
     community_extension = models.BooleanField(default=False)
@@ -100,8 +100,8 @@ class ResearchRecord(models.Model):
     proposal = models.ForeignKey(Record, on_delete=models.CASCADE, related_name='proposal')
     research = models.ForeignKey(Record, on_delete=models.SET_NULL, related_name='research', null=True, blank=True)
 
-    def __str__(self):
-        return self.record.title
+    # def __str__(self):
+    #     return self.research
 
 class CheckedRecord(models.Model):
     record = models.ForeignKey(Record, on_delete=models.CASCADE)

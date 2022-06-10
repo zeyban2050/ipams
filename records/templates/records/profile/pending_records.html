@@ -91,7 +91,9 @@
             reqs[0].value = _class[1];
         }
 
-        console.log($('a[data-toggle="tab"]'));
+        $("#approvedDownloadBtn").on("click",function(){
+            $('#loadIndicator').html('<div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>');
+        });
 
     </script>
 {% endblock %}
@@ -304,6 +306,7 @@
                   <div class="modal-body">
                     Approve the user to download abstract.
                   </div>
+                  <div id="loadIndicator"></div>
                   <div class="modal-footer">
                     <input type="hidden" name="request_id" class="request">
                     <button type="submit" class="btn btn-primary" id="approvedDownloadBtn" name="approvedDownloadBtn">Approve</button>

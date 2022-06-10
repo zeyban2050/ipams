@@ -172,6 +172,7 @@
 		 		return false;
 			}
 			else{
+				$('#loadIndicator').html('<div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>');
 				var valid = false;
 				year_max = new Date().getFullYear()+1;
 				if($("#id_year_accomplished").val()!=""){
@@ -401,6 +402,7 @@
 										<label>Adviser to submit this record to:</label> <input placeholder="search username" id="adviser-id" name="adviser-id" type="text" class="form-control">
 									</div>
 								</div>
+								<div id="loadIndicator"></div>
 								<div class="modal-footer">
 									{% if not test_form %}
 										<div id="recaptcha">

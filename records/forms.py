@@ -13,6 +13,7 @@ class RecordForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(RecordForm, self).__init__(*args, **kwargs)
         self.fields['year_accomplished'].label = 'Year Started'
+        self.fields['abstract_file'].label = 'Whole Proposal/Research Paper'
 
     class Meta:
         model = Record
@@ -113,6 +114,7 @@ class EditRecordForm(forms.ModelForm):
         super(EditRecordForm, self).__init__(*args, **kwargs)
         self.fields['abstract_file'].required = False
         self.fields['year_accomplished'].label = 'Year Started'
+        self.fields['abstract_file'].label = 'Whole Proposal/Research Paper'
 
     class Meta:
         model = Record

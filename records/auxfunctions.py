@@ -346,23 +346,21 @@ def approvedDeleteRecord(request, userID, recordID, recipientID, reason):
 
 	notification.save()
 
+	mail_subject = NotificationType.objects.get(pk=11)
 	url = request.build_absolute_uri()
 	base_url = url.split("record/")
 	redirect_path = base_url[0] + 'records/pending/'
 
 	# to admins who would approved the request
-	kr_accounts = User.objects.filter(Q(role__in=Subquery(UserRole.objects.filter(pk=5).values('pk'))) | Q(role__in=Subquery(UserRole.objects.filter(pk=4).values('pk'))))
-
-	mail_subject = NotificationType.objects.get(pk=11)
-	message = (
-		f'{user.first_name} {user.last_name} has approved the request of {recipient.first_name} {recipient.last_name} to delete the record {record.title}' \
-		f' with a classification of {record.classification} and a PSCED classification of' \
-		f' {record.psced_classification} with the reasoning {reason}. \n\nThe record has been automatically deleted.' \
-		f'\nTo approve other requests, login to the website {redirect_path}'
-	)
-	
-	messages_to_send = [(mail_subject, message, settings.EMAIL_HOST_USER, [account.email]) for account in kr_accounts]
-	send_mass_mail(messages_to_send) 
+	# kr_accounts = User.objects.filter(Q(role__in=Subquery(UserRole.objects.filter(pk=5).values('pk'))) | Q(role__in=Subquery(UserRole.objects.filter(pk=4).values('pk'))))
+	# message = (
+	# 	f'{user.first_name} {user.last_name} has approved the request of {recipient.first_name} {recipient.last_name} to delete the record {record.title}' \
+	# 	f' with a classification of {record.classification} and a PSCED classification of' \
+	# 	f' {record.psced_classification} with the reasoning {reason}. \n\nThe record has been automatically deleted.' \
+	# 	f'\nTo approve other requests, login to the website {redirect_path}'
+	# )	
+	# messages_to_send = [(mail_subject, message, settings.EMAIL_HOST_USER, [account.email]) for account in kr_accounts]
+	# send_mass_mail(messages_to_send) 
 
 	# for whoever sent the request that got approved
 	message = (
