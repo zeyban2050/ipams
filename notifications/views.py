@@ -269,7 +269,7 @@ class RDCONotification(View):
 class TBINotification(View):
     name = 'notifications/ktto_notification_page.html'
 
-    @method_decorator(authorized_roles(roles=['ktto']))
+    @method_decorator(authorized_roles(roles=['tbi']))
     @method_decorator(login_required(login_url='/'))
     def get(self, request):
         user = request.user
