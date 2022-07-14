@@ -252,7 +252,7 @@
         $(".download").on("click", function(){
             Swal.fire({
               title: 'Send Request to Download Abstract',
-              text: "To download abstract of {{ record.title }} please click Send Request button to ask for permission. Once approved you will be notified through your email account.",
+              text: "To download {{ record.title }} please click Send Request button to ask for permission. Once approved you will be notified through your email account.",
               type: 'info',
               showCancelButton: true,
               confirmButtonColor: '#3085d6',
@@ -276,7 +276,7 @@
                 });
                 Swal.fire(
                     "Request Sent!",
-                    "Record would be deleted automatically after the approval of an admin.",
+                    "Upon approval a link will be sent and by clicking the link the record would download automatically.",
                     'success'
                 ).then((result) => {
                     window.location.reload();
