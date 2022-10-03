@@ -233,7 +233,7 @@ def recordStatus(request, userID, recordID, recipientID, status):
 			messages_to_send = [(mail_subject, message, settings.EMAIL_HOST_USER, [account.email]) for account in ktto_accounts]
 			send_mass_mail(messages_to_send) 
 			
-		if user.role.name == 'KTTO':
+		if user.role.name == 'KTTO' or user.role.name == 'TBI':
 			# to_rdco is true because after ktto approved is rdco
 			notification = Notification(user=user, role=user.role, record=record, 
 				notif_type=notif_type, to_rdco=True, is_read=False, date_created=dt.now())
