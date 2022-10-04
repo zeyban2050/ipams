@@ -1830,8 +1830,8 @@ class ParseExcel(View):
 def download_format(request):
     fl_path = '/media'
     filename = 'data.xlsx'
-    fl = open('media/data.xlsx', mode='r', encoding="UTF-8-sig", errors="ignore", buffering=1)
-    mime_type, _ = mimetypes.guess_type(fl_path)
+    fl = open('media/data.xlsx', 'rb')
+    mime_type = mimetypes.guess_type(fl_path)
     response = HttpResponse(fl, content_type=mime_type)
     response['Content-Disposition'] = "attachment; filename=%s" % filename
     return response
