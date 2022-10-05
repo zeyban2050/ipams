@@ -44,33 +44,33 @@ from axes.utils import reset
 def is_ajax(request):
     return request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
 
-class RegisterView(View):
-    name = 'accounts/register.html'
+# class RegisterView(View):
+#     name = 'accounts/register.html'
 
-    def get(self, request):
-        form = forms.RegistrationForm()
-        return render(request, self.name, {'form': form, 'hide_profile': True})
+#     def get(self, request):
+#         form = forms.RegistrationForm()
+#         return render(request, self.name, {'form': form, 'hide_profile': True})
 
-    def post(self, request):
-        form = forms.RegistrationForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            password = form.cleaned_password()
-            if password:
-                user.set_password(password)
-                user.save()
-                login(request, user)
-                return redirect('/')
-            messages.error(request, 'Password did not match!')
-        else:
-            if not form.cleaned_data.get('username'):
-                messages.error(request, 'Username not available')
-            elif not form.cleaned_data.get('email'):
-                messages.error(request, 'That E-mail is already in used by another user')
-            else:
-                messages.error(request, 'Invalid form')
-        form = forms.RegistrationForm()
-        return render(request, self.name, {'form': form, 'hide_profile': True})
+#     def post(self, request):
+#         form = forms.RegistrationForm(request.POST)
+#         if form.is_valid():
+#             user = form.save(commit=False)
+#             password = form.cleaned_password()
+#             if password:
+#                 user.set_password(password)
+#                 user.save()
+#                 login(request, user)
+#                 return redirect('/')
+#             messages.error(request, 'Password did not match!')
+#         else:
+#             if not form.cleaned_data.get('username'):
+#                 messages.error(request, 'Username not available')
+#             elif not form.cleaned_data.get('email'):
+#                 messages.error(request, 'That E-mail is already in used by another user')
+#             else:
+#                 messages.error(request, 'Invalid form')
+#         form = forms.RegistrationForm()
+#         return render(request, self.name, {'form': form, 'hide_profile': True})
 
 
 class SignupView(View):
