@@ -3,7 +3,7 @@ from . import views
 from records import views as record_views
 
 urlpatterns = [
-    path('register/', views.RegisterView.as_view(), name='accounts-register'),
+    # path('register/', views.RegisterView.as_view(), name='accounts-register'),
     path('signup/', views.SignupView.as_view(), name='accounts-signup'),
     path('get/all/', views.get_all_accounts, name='accounts-get-all'),
     # path('login/', views.login_user, name='accounts-login'),
