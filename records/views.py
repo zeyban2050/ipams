@@ -95,6 +95,8 @@ class Home(View):
         departments = Department.objects.all()
 
         logs = request.session.get('logs', '')
+        year_from = request.session.get('year_from', '')
+        year_to = request.session.get('year_to', '')
         context = {
             'login_required': login_required,
             'record_form': forms.RecordForm(),
@@ -103,8 +105,8 @@ class Home(View):
             'test_form': settings.TEST_FORM,
             'user_roles': user_roles,
             'logs': logs,
-            'year_from': datetime.datetime.now().year,
-            'year_to': datetime.datetime.now().year,
+            'year_from': year_from,
+            'year_to': year_to,
             'landing_page': Setting.objects.get(name='landing_page'),
 
             'departments': departments,
@@ -135,8 +137,8 @@ class Home(View):
                 return JsonResponse({'success': success})
             # filtering records
             elif request.POST.get('is_filtered') == 'true':
-                year_from_filter = request.POST.get('year_from', '0')
-                year_to_filter = request.POST.get('year_to', '0')
+                year_from_filter = request.POST.get('year_from', '')
+                year_to_filter = request.POST.get('year_to', '')
                 classification_filter = request.POST.get('classification')
                 psced_classification_filter = request.POST.get('psced_classification')
                 author_filter = request.POST.get('author')
@@ -150,8 +152,12 @@ class Home(View):
                 commercialization_filter = request.POST.get('commercialization_cb')
                 community_filter = request.POST.get('community_cb')
                 
-                if year_from_filter != '' or year_to_filter != '':
-                    records = records.filter(year_accomplished__gte=year_from_filter).filter(year_accomplished__lte=year_to_filter)
+                if (year_from_filter != '' and year_to_filter != ''):
+                    records = records.filter(year_accomplished__gte=year_from_filter).filter(year_completed__lte=year_to_filter)
+                elif year_from_filter != '':
+                    records = records.filter(year_accomplished__gte=year_from_filter)
+                elif year_to_filter != '':
+                    records = records.filter(year_completed__lte=year_to_filter)
                 
                 if ip_filter != '' and commercialization_filter == '' and community_filter == '':
                     records = records.filter(is_ip=True)
