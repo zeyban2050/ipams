@@ -32,6 +32,7 @@ from axes.models import AccessAttempt, AccessBase
 from axes.utils import reset
 
 from django.conf import settings
+import celery
 
 FILE_LENGTH = 5242880
 
@@ -88,7 +89,7 @@ def is_ajax(request):
 
 class Home(View):
     name = 'records/index.html'
-
+    
     def get(self, request):
         login_required = request.GET.get('next', False)
         user_roles = UserRole.objects.all()
@@ -115,14 +116,13 @@ class Home(View):
             del request.session['logs']
             request.session.modified = True
         return render(request, self.name, context)
-
     def post(self, request):
         if is_ajax(request=request):
             data = []
             ip_tag = ''
             commercialization_tag = ''
             community_tag = ''
-            checked_records = CheckedRecord.objects.filter(status='approved', checked_by__in=Subquery(User.objects.filter(role=5).values('pk')))
+            checked_records = CheckedRecord.objects.filter(status='approved', checked_by__in=Subquery(User.objects.filter(role=5).values('pk'))).select_related('record')
             records = Record.objects.filter(pk__in=Subquery(checked_records.values('record_id')))
 
             # removing accounts
@@ -137,8 +137,8 @@ class Home(View):
                 return JsonResponse({'success': success})
             # filtering records
             elif request.POST.get('is_filtered') == 'true':
-                year_from_filter = request.POST.get('year_from', '')
-                year_to_filter = request.POST.get('year_to', '')
+                year_from_filter = request.POST.get('year_from', '0')
+                year_to_filter = request.POST.get('year_to', '0')
                 classification_filter = request.POST.get('classification')
                 psced_classification_filter = request.POST.get('psced_classification')
                 author_filter = request.POST.get('author')
@@ -214,8 +214,9 @@ class Home(View):
                     else:
                         accounts_str += f', {user.username}'
                     RoleRequest.objects.filter(user=user).delete()
-                Log(user=request.user, action=f'accounts: {accounts_str} account_role changed to \"{UserRole.objects.get(pk=role_id)}\" by: {request.user.username}').save()
-                roleRequestApproved(request, request.user.id, user.id)
+                Log(user=request.user, action=f'accounts: {accounts_str} account_role changed to \"{user.role}\" by: {request.user.username}').save()
+                roleRequestNotify(request.user.id, user.id)
+                #roleRequestApproved(request, request.user.id, user.id)
             # setting datatable records
             for record in records:
                 record_conference = Conference.objects.filter(record=record.id)
@@ -2512,9 +2513,9 @@ class DashboardManageAccounts(View):
                     else:
                         accounts_str += f', {user.username}'
                     RoleRequest.objects.filter(user=user).delete()
-                Log(user=request.user, action=f'accounts: {accounts_str} account_role changed to \"{UserRole.objects.get(pk=role_id)}\" by: {request.user.username}').save()
-                roleRequestApproved(request, request.user.id, user.id)
-
+                Log(user=request.user, action=f'accounts: {accounts_str} account_role changed to \"{user.role}\" by: {request.user.username}').save()
+                roleRequestNotify(request.user.id, user.id)
+                #roleRequestApproved(request, request.user.id, user.id)
 
 class LockoutPage(View):
     name="records/lockout_page.html"

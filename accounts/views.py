@@ -1,3 +1,4 @@
+from http.client import INTERNAL_SERVER_ERROR
 import json
 import requests
 
@@ -17,7 +18,7 @@ from .decorators import authorized_roles
 from .models import User, UserRole, RoleRequest, Course, Student, Log, Setting, College, Department, Adviser, UserRecord
 from records.models import CheckedRecord, Record
 from notifications.models import Notification, NotificationType
-from accounts.auxfunctions import roleRequestStudent, roleRequestAdviser
+from accounts.auxfunctions import roleRequestStudent, roleRequestStudentNotify, roleRequestAdviserNotify, roleRequestAdviser
 from django.db.models import Q, Subquery
 from django.contrib.auth.hashers import check_password
 
@@ -115,12 +116,15 @@ class SignupView(View):
                     if request.POST.get('role', '0') == '2':
                         course = json.loads(request.POST.get('course'))
                         Student(user=user, course=Course.objects.get(pk=int(course[0]['id']))).save()
-                        roleRequestStudent(request, user.id, Course.objects.only('name').get(pk=int(course[0]['id'])).name)
+                        # course=Course.objects.get(pk=int(course[0]['id']))
+                        roleRequestStudentNotify(user.id, course)
+                        roleRequestStudent(request, user.id)
                     elif request.POST.get('role', '0') == '3':
                         college = json.loads(request.POST.get('college'))
                         department = json.loads(request.POST.get('department'))
                         Adviser(user=user, department=Department.objects.get(pk=int(department[0]['id'])), 
                             college=College.objects.get(pk=int(college[0]['id']))).save()
+                        roleRequestAdviserNotify(user.id)
                         roleRequestAdviser(request, user.id)
                     RoleRequest(user=user, role=UserRole.objects.get(pk=int(request.POST.get('role', 0)))).save()
                     
@@ -157,7 +161,7 @@ class SignupView(View):
                     error_message = 'Invalid form'
             if error_message:
                 messages.error(request, error_message)
-            form = forms.RegistrationForm(request.POST)
+            # form = forms.RegistrationForm(request.POST)
             return render(request, self.name, {'form': form, 'hide_profile': True})
 
 #For activation of user account through email
@@ -266,13 +270,13 @@ def get_all_accounts(request):
     if request.method == 'POST':
         accounts = None
         if str.lower(request.user.role.name) == 'adviser':
-            accounts = User.objects.filter(Q(role=UserRole.objects.get(pk=1)) | Q(role=UserRole.objects.get(pk=2)))
+            accounts = User.objects.prefetch_related('role').filter(Q(role=UserRole.objects.get(pk=1)) | Q(role=UserRole.objects.get(pk=2))).prefetch_related('role')
         else:
-            accounts = User.objects.all()
+            accounts = User.objects.prefetch_related('role').filter(is_verified=True)
         data = []
         for account in accounts:
             role = ''
-            role_request = RoleRequest.objects.filter(user=account).first()
+            role_request = RoleRequest.objects.select_related('role').filter(user=account).first()
             if role_request and role_request.role.pk != 1:
                 role = f'<a href="#" onclick="acceptRole({account.pk}, {role_request.role.pk})">{role_request.role.name}</a>'
             data.append([

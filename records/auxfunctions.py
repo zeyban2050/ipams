@@ -1,11 +1,15 @@
+from asyncio import Task
+from multiprocessing import shared_memory
+from turtle import delay
 from notifications.models import Notification, NotificationType
 from accounts.models import UserRole, User, Student, Course
 from .models import Record
 from datetime import datetime as dt
 from django.contrib import messages
 from django.db.models import Subquery, Q
-from django.core.mail import send_mail, send_mass_mail
+from django.core.mail import send_mail, send_mass_mail, EmailMultiAlternatives
 from ipams import settings
+from celery import shared_task
 
 # Connecting to Google Cloud Storage
 # from google.cloud import storage
@@ -163,29 +167,44 @@ def resubmission(request, userID, recordID, checkedByID):
 
 
 # role request approved 
-def roleRequestApproved(request, userID, recipientID):
+def roleRequestNotify(userID, recipientID):
 	user = User.objects.get(pk=userID)
 	recipient = User.objects.get(pk=recipientID)
 
 	notification = Notification(user=user, role=user.role, recipient=recipient, 
-		notif_type=NotificationType.objects.get(pk=6), to_ktto=True, to_rdco=True, is_read=False, date_created=dt.now())
+	notif_type=NotificationType.objects.get(pk=6), to_ktto=True, to_rdco=True, is_read=False, date_created=dt.now())
 
 	notification.save()
+
+def roleRequestApproved(request, userID, recipientID):
+	user = User.objects.get(pk=userID)
+	recipient = User.objects.get(pk=recipientID)
 
 	url = request.build_absolute_uri()
 	base_url = url.split("account/signup")
 	redirect_path = base_url[0]
 
-	karts_accounts = User.objects.filter(Q(pk=recipient.pk) | Q(role__in=Subquery(UserRole.objects.filter(pk=3).values('pk'))) | Q(role__in=Subquery(UserRole.objects.filter(pk=4).values('pk'))) | Q(role__in=Subquery(UserRole.objects.filter(pk=5).values('pk'))) | Q(role__in=Subquery(UserRole.objects.filter(pk=7).values('pk'))))
-	
-	mail_subject = NotificationType.objects.get(pk=6)
-	message = (
-		f"{user.first_name} {user.last_name} approved {recipient.first_name} {recipient.last_name}'s request to be a {recipient.role}." \
-		f' \nLogin to the website {redirect_path} for more information.'
+	# karts_accounts = User.objects.filter(Q(pk=recipient.pk) | Q(role__in=Subquery(UserRole.objects.filter(pk=3).values('pk'))) | Q(role__in=Subquery(UserRole.objects.filter(pk=4).values('pk'))) | Q(role__in=Subquery(UserRole.objects.filter(pk=5).values('pk'))) | Q(role__in=Subquery(UserRole.objects.filter(pk=7).values('pk'))))
+	message = EmailMultiAlternatives(
+		subject = "Role Request Approved",
+		from_email = settings.EMAIL_HOST_USER,
+		to = ([recipient.email]),
+			body = (
+				f"{user.first_name} {user.last_name} approved {recipient.first_name} {recipient.last_name}'s request to be a {recipient.role}." \
+				f' \nLogin to the website {redirect_path} for more information.'
+			)
 	)
+	message.send()
 
-	messages_to_send = [(mail_subject, message, settings.EMAIL_HOST_USER, [account.email]) for account in karts_accounts]
-	send_mass_mail(messages_to_send) 
+	# mail_subject = NotificationType.objects.get(pk=6)
+	# mail_subject = 'Role Request Approved'
+	# message = (
+	# 	f"{user.first_name} {user.last_name} approved {recipient.first_name} {recipient.last_name}'s request to be a {recipient.role}." \
+	# 	f' \nLogin to the website {redirect_path} for more information.'
+	# )
+	# email_from = settings.EMAIL_HOST_USER
+	# messages_to_send = [(mail_subject, message, email_from, [account.email]) for account in karts_accounts]
+	# send_mass_mail(messages_to_send) 
 
 # comments	
 def recordComment(request, userID, recordID, recipientID):
