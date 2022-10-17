@@ -59,7 +59,7 @@ class StudentNotification(View):
                 request.session['notif_count'] = notifications.count()
                 notif = Notification.objects.get(pk=id)
                 if notif.notif_type.name == 'Record Approved' or notif.notif_type.name == 'Record Decline':
-                    record_status = CheckedRecord.objects.filter(record=notif.record.id).latest('status')
+                    record_status = CheckedRecord.objects.filter(record=notif.record_id).latest('status')
                     return JsonResponse({'success': True,
                                         'date': notif.date_created.strftime('%B %d, %Y, %#I:%M %p'),
                                         'subject': notif.notif_type.name,
