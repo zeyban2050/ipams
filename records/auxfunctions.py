@@ -72,11 +72,11 @@ def newRecordAdded(request, userID, adviserID, recordID):
 	adviser = User.objects.get(pk=adviserID)
 	record = Record.objects.get(pk=recordID)
 
-	if record.record_type.pk == 1 or record.record_type.pk == 2:
+	if record.record_type_id == 1 or record.record_type_id == 2:	
 		notif_type = NotificationType.objects.get(pk=3)
-	elif record.record_type.pk == 3:
+	elif record.record_type_id == 3:
 		notif_type = NotificationType.objects.get(pk=4)
-
+	
 	if user.role.name == 'Student':
 		course = Student.objects.get(user=user.id).course.name
 		role = UserRole.objects.get(pk=2)
@@ -223,7 +223,7 @@ def recordStatus(request, userID, recordID, recipientID, status):
 	record = Record.objects.get(pk=recordID)
 	recipient = User.objects.get(pk=recipientID)
 
-	if record.record_type.pk == 1 or record.record_type.pk == 2:
+	if record.record_type_id == 1 or record.record_type_id == 2:	
 		notif_type = NotificationType.objects.get(pk=3)
 	elif record.record_type.pk == 3:
 		notif_type = NotificationType.objects.get(pk=4)

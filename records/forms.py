@@ -26,9 +26,21 @@ class RecordForm(forms.ModelForm):
         classification = self.cleaned_data.get('classification')
         psced_classification = self.cleaned_data.get('psced_classification')
         abstract = self.cleaned_data.get('abstract', None)
-        record_len = len(Record.objects.filter(title=title, year_accomplished=year_accomplished, year_completed=year_completed, abstract=abstract,
-                                               classification=classification,
-                                               psced_classification=psced_classification))
+        # record_len = len(Record.objects.filter(title=title, year_accomplished=year_accomplished, year_completed=year_completed, abstract=abstract,
+        #                                        classification=classification,
+        #                                        psced_classification=psced_classification))
+        
+        record_len = Record.objects.filter(
+            title=title,
+            year_accomplished=year_accomplished,
+            year_completed=year_completed,
+            abstract=abstract,
+            classification=classification,
+            psced_classification=psced_classification,
+        ).count()
+
+
+
         if record_len == 0 or abstract is not None:
             # test encryption
             abstract_file = self.cleaned_data.get('abstract_file')
@@ -127,9 +139,18 @@ class EditRecordForm(forms.ModelForm):
         classification = self.cleaned_data.get('classification')
         psced_classification = self.cleaned_data.get('psced_classification')
         abstract = self.cleaned_data.get('abstract', None)
-        record_len = len(Record.objects.filter(title=title, year_accomplished=year_accomplished, year_completed=year_completed, abstract=abstract,
-                                               classification=classification,
-                                               psced_classification=psced_classification))
+        # record_len = len(Record.objects.filter(title=title, year_accomplished=year_accomplished, year_completed=year_completed, abstract=abstract,
+        #                                        classification=classification,
+        #                                        psced_classification=psced_classification))
+        record_len = Record.objects.filter(
+            title=title,
+            year_accomplished=year_accomplished,
+            year_completed=year_completed,
+            abstract=abstract,
+            classification=classification,
+            psced_classification=psced_classification,
+        ).count()
+        
         if record_len == 0 or abstract is not None:
             m = super(EditRecordForm, self).save(commit=False)
             if commit:
