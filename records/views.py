@@ -215,8 +215,8 @@ class Home(View):
                         accounts_str += f', {user.username}'
                     RoleRequest.objects.filter(user=user).delete()
                 Log(user=request.user, action=f'accounts: {accounts_str} account_role changed to \"{user.role}\" by: {request.user.username}').save()
-                roleRequestNotify(request.user.id, user.id)
-                #roleRequestApproved(request, request.user.id, user.id)
+                #roleRequestNotify(request.user.id, user.id)
+                roleRequestApproved(request, request.user.id, user.id)
             # setting datatable records
             for record in records:
                 record_conference = Conference.objects.filter(record=record.id)
@@ -2514,8 +2514,8 @@ class DashboardManageAccounts(View):
                         accounts_str += f', {user.username}'
                     RoleRequest.objects.filter(user=user).delete()
                 Log(user=request.user, action=f'accounts: {accounts_str} account_role changed to \"{user.role}\" by: {request.user.username}').save()
-                roleRequestNotify(request.user.id, user.id)
-                #roleRequestApproved(request, request.user.id, user.id)
+                #roleRequestNotify(request.user.id, user.id)
+                roleRequestApproved(request, request.user.id, user.id)
 
 class LockoutPage(View):
     name="records/lockout_page.html"
