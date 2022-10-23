@@ -27,40 +27,57 @@ class EmailThreading(Thread):
 	def run(self):
 		self.email_message.send()
 
+class EmailThreadingStudent(Thread):
+	def __init__(self, email_message_student):
+		self.email_message_student = email_message_student
+		Thread.__init__(self)
+
+	def run(self):
+		self.email_message_student.send()	
+
+class EmailThreadingAdviser(Thread):
+	def __init__(self, email_message_adviser):
+		self.email_message_adviser = email_message_adviser
+		Thread.__init__(self)
+
+	def run(self):
+		self.email_message_adviser.send()
+
 def roleRequestStudent(request, userID):
 	user = User.objects.get(pk=userID)
-	kart_accounts = User.objects.filter(role=4).select_related('role')
+	kart_accounts = User.objects.filter(role=3).select_related('role')
 	#kart_accounts = User.objects.filter(role__in=Subquery(UserRole.objects.filter(pk=4).values('pk')))
 
 	messages.success(request, "Role Request to be a student sent")
 	url = request.build_absolute_uri()
 	base_url = url.split("account/signup")
 	redirect_path = base_url[0]
-	mail_subject = 'Role Request Student'
-	message = (
-				f' {user.first_name} {user.last_name} created an account and requested to be a Student under the program {user.student.course.name}.' \
-				f' \nTo accept the role request of the user, login to the website {redirect_path}.'
-			)
+	# mail_subject = 'Role Request Student'
+	# message = (
+	# 			f' {user.first_name} {user.last_name} created an account and requested to be a Student under the program {user.student.course.name}.' \
+	# 			f' \nTo accept the role request of the user, login to the website {redirect_path}.'
+	# 		)
 
-	for account in kart_accounts:
-		email_message = send_mail(
-			mail_subject,
-			message,
-			settings.EMAIL_HOST_USER,
-			[account.email]
-		)
-	EmailThreading(email_message).start()
+	# for account in kart_accounts:
+	# 	email_message_student = send_mail(
+	# 		mail_subject,
+	# 		message,
+	# 		settings.EMAIL_HOST_USER,
+	# 		[account.email]
+	# 	)
+	# EmailThreadingStudent(email_message_student).start()
 
 	# kart_accounts = User.objects.filter(Q(role__in=Subquery(UserRole.objects.filter(pk=3).values('pk'))) | Q(role__in=Subquery(UserRole.objects.filter(pk=4).values('pk'))) | Q(role__in=Subquery(UserRole.objects.filter(pk=5).values('pk'))) | Q(role__in=Subquery(UserRole.objects.filter(pk=7).values('pk'))))
 
-	# mail_subject = 'Role Request Student'
-	# message = (
-	# 	f' {user.first_name} {user.last_name} created an account and requested to be a Student under the program {user.student.course.name}.' \
-	# 	f' \nTo accept the role request of the user, login to the website {redirect_path}.'
-	# )
+	mail_subject = 'Role Request Student'
+	message = (
+		f' {user.first_name} {user.last_name} created an account and requested to be a Student under the program {user.student.course.name}.' \
+		f' \nTo accept the role request of the user, login to the website {redirect_path}.'
+	)
 
-	# messages_to_send = [(mail_subject, message, settings.EMAIL_HOST_USER, [account.email]) for account in kart_accounts]
-	# send_mass_mail(messages_to_send) 
+	messages_to_send = [(mail_subject, message, settings.EMAIL_HOST_USER, [account.email]) for account in kart_accounts]
+	email_message_student = send_mass_mail(messages_to_send)
+	EmailThreadingStudent(email_message_student).start()
 
 # request to be adviser method
 # def roleRequestAdviserNotify(userID):
@@ -74,31 +91,13 @@ def roleRequestStudent(request, userID):
 
 def roleRequestAdviser(request, userID):
 	user = User.objects.get(pk=userID)
-	kart_accounts = User.objects.filter(role=4).select_related('role')
+	kart_accounts = User.objects.filter(role__gte=4).select_related('role')
 	messages.success(request, "Role Request to be an adviser sent")
 
 	url = request.build_absolute_uri()
 	base_url = url.split("account/signup")
 	redirect_path = base_url[0]
 
-	mail_subject = 'Role Request Adviser'
-	message = (
-		f' {user.first_name} {user.last_name} created an account and requested to be an Adviser' \
-		f' under the department of {user.adviser.department.name} and college of {user.adviser.college.name}.' \
-		f' \nTo accept the role request of the user, login to the website {redirect_path}.'
-	)
-
-	for account in kart_accounts:
-		email_message = send_mail(
-			mail_subject,
-			message,
-			settings.EMAIL_HOST_USER,
-			[account.email]
-		)
-	EmailThreading(email_message).start()
-
-	# kart_accounts = User.objects.filter(Q(role__in=Subquery(UserRole.objects.filter(pk=3).values('pk'))) | Q(role__in=Subquery(UserRole.objects.filter(pk=4).values('pk'))) | Q(role__in=Subquery(UserRole.objects.filter(pk=5).values('pk'))) | Q(role__in=Subquery(UserRole.objects.filter(pk=7).values('pk'))))
-	
 	# mail_subject = 'Role Request Adviser'
 	# message = (
 	# 	f' {user.first_name} {user.last_name} created an account and requested to be an Adviser' \
@@ -106,5 +105,24 @@ def roleRequestAdviser(request, userID):
 	# 	f' \nTo accept the role request of the user, login to the website {redirect_path}.'
 	# )
 
-	# messages_to_send = [(mail_subject, message, settings.EMAIL_HOST_USER, [account.email]) for account in kart_accounts]
-	# send_mass_mail(messages_to_send)
+	# for account in kart_accounts:
+	# 	email_message_adviser = send_mass_mail(
+	# 		mail_subject,
+	# 		message,
+	# 		settings.EMAIL_HOST_USER,
+	# 		[account.email]
+	# 	)
+	# EmailThreadingAdviser(email_message_adviser).start()
+
+	# kart_accounts = User.objects.filter(Q(role__in=Subquery(UserRole.objects.filter(pk=3).values('pk'))) | Q(role__in=Subquery(UserRole.objects.filter(pk=4).values('pk'))) | Q(role__in=Subquery(UserRole.objects.filter(pk=5).values('pk'))) | Q(role__in=Subquery(UserRole.objects.filter(pk=7).values('pk'))))
+	
+	mail_subject = 'Role Request Adviser'
+	message = (
+		f' {user.first_name} {user.last_name} created an account and requested to be an Adviser' \
+		f' under the department of {user.adviser.department.name} and college of {user.adviser.college.name}.' \
+		f' \nTo accept the role request of the user, login to the website {redirect_path}.'
+	)
+
+	messages_to_send = [(mail_subject, message, settings.EMAIL_HOST_USER, [account.email]) for account in kart_accounts]
+	email_message_adviser = send_mass_mail(messages_to_send)
+	EmailThreadingAdviser(email_message_adviser).start()

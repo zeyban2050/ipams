@@ -1,5 +1,7 @@
+from concurrent.futures import thread
 from http.client import INTERNAL_SERVER_ERROR
 import json
+from threading import Thread
 import requests
 
 from django.contrib import messages
@@ -114,18 +116,22 @@ class SignupView(View):
                     user.save()
                     if request.POST.get('role', '0') == '2':
                         course = json.loads(request.POST.get('course'))
-                        Student(user=user, course=Course.objects.get(pk=int(course[0]['id']))).save()
+                        Student(user=user, course=Course.objects.get(pk=course[0]['id'])).save()
+                        #Student(user=user, course=Course.objects.get(pk=int(course[0]['id']))).save()
                         # course=Course.objects.get(pk=int(course[0]['id']))
                         # roleRequestStudentNotify(user.id, course)
                         roleRequestStudent(request, user.id)
                     elif request.POST.get('role', '0') == '3':
                         college = json.loads(request.POST.get('college'))
                         department = json.loads(request.POST.get('department'))
-                        Adviser(user=user, department=Department.objects.get(pk=int(department[0]['id'])), 
-                            college=College.objects.get(pk=int(college[0]['id']))).save()
+                        Adviser(user=user, department=Department.objects.get(pk=department[0]['id']), 
+                            college=College.objects.get(pk=college[0]['id'])).save()
+                        # Adviser(user=user, department=Department.objects.get(pk=int(department[0]['id'])), 
+                        #     college=College.objects.get(pk=int(college[0]['id']))).save()
                         # roleRequestAdviserNotify(user.id)
                         roleRequestAdviser(request, user.id)
-                    RoleRequest(user=user, role=UserRole.objects.get(pk=int(request.POST.get('role', 0)))).save()
+                    RoleRequest(user=user, role=UserRole.objects.get(pk=request.POST.get('role', 0))).save()
+                    #RoleRequest(user=user, role=UserRole.objects.get(pk=int(request.POST.get('role', 0)))).save()
                     
                     #composing the message that will be sent to user email account
                     current_site = get_current_site(request)
@@ -268,11 +274,12 @@ def change_password(request):
 def get_all_accounts(request):
     if request.method == 'POST':
         accounts = None
-        # if str.lower(request.user.role.name) == 'adviser':
-        #     accounts = User.objects.prefetch_related('role').filter(Q(role=UserRole.objects.get(pk=1)) | Q(role=UserRole.objects.get(pk=2))).prefetch_related('role')
-        # else:
-        #     accounts = User.objects.prefetch_related('role').filter(is_verified=True)
-        accounts = User.objects.prefetch_related('role').filter(is_verified=True)
+        if request.user.role.name == 'Adviser':
+            #accounts = User.objects.prefetch_related('role').filter(Q(role=UserRole.objects.get(pk=1)) | Q(role=UserRole.objects.get(pk=2))).prefetch_related('role')
+            accounts = User.objects.prefetch_related('role').filter(role__lte=2)
+        else:
+            accounts = User.objects.prefetch_related('role').all()
+        
         data = []
         for account in accounts:
             role = ''
