@@ -91,7 +91,7 @@
                $('#notification-body').html('<span>Subject: {{ subject_body }}</span><br><span>Date: {{ date }}</span><br><br><span>Title: {{ title }}</span><br><br><span>Author/s: {{ authors }}</span><br><br><span>Classification: {{ classification }}</span><br><br><span>Psced: {{ psced }}</span><br><br><span>Content: Record has been declined by {{ checked_by }}.</span><br><br><a href="/record/myrecords/{{ recordID }}">View Record</a>'); 
             }
             if('{{ subject }}' == 'Role Request Approved'){
-               $('#notification-body').html('<span>Subject: {{ subject_body }}</span><br><span>Date: {{ date }}</span><br><br><span>First name: {{ fname }}</span><br><br><span>Middle name: {{ mname }}</span><br><br><span>Last name: {{ lname }}</span><br><br><span>Username: {{ username }}</span><br><br><span>Request: {{ request }}</span><br><br><span>Content: Role Request by {{ recipient }} has been approved by {{ approved_by }}</span><br>'); 
+               $('#notification-body').html('<span>Subject: {{ subject_body }}</span><br><span>Date: {{ date }}</span><br><br><span>First name: {{ fname }}</span><br><br><span>Middle name: {{ mname }}</span><br><br><span>Last name: {{ lname }}</span><br><br><span>Username: {{ username }}</span><br><br><span>Request: {{ request }}</span><br><br><span>Content: Role Request has been approved by {{ approved_by }}</span><br>'); 
             }
             var btns = document.getElementsByClassName("saveID");
             $(btns[0]).addClass("active");
