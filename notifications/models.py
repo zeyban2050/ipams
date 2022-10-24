@@ -14,7 +14,9 @@ class NotificationType(models.Model):
 
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True, related_name='user') #who sent the notification
-    course = models.CharField(blank=True, null=True, max_length=50) # student course if student
+    course = models.CharField(
+        blank=True, default='', max_length=50
+    )  # student course if student 
     recipient = models.ForeignKey(User, on_delete=models.DO_NOTHING, blank=True, null=True, related_name='recipient') #who will receive the notification
     role = models.ForeignKey(UserRole, on_delete=models.CASCADE, blank=True, null=True, default=7, related_name='role') # role of who sent the notification
     record = models.ForeignKey(Record, on_delete=models.CASCADE, blank=True, null=True, related_name='record') # current record if record

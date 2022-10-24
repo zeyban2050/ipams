@@ -105,43 +105,59 @@ def notificationContent(request, id, notifications):
     request.session['notif_count'] = notifications.count()
     notif = Notification.objects.get(pk=id)
     if notif.notif_type.name == 'Role Request Student' or notif.notif_type.name == 'Role Request Adviser':
-        return JsonResponse({'success': True,
-                            'fname': notif.user.first_name,
-                            'mname': notif.user.middle_name,
-                            'lname': notif.user.last_name,
-                            'username': notif.user.username,
-                            'email': notif.user.email,
-                            'course': notif.course,
-                            'date': notif.date_created.strftime('%B %d, %Y, %#I:%M %p'),
-                            'subject': notif.notif_type.name,
-                            'id': notif.user.id,
-                            'role': notif.user.role.name})
+ 
+        return JsonResponse(
+            {
+                 'success': True,
+                 'fname': notif.user.first_name,
+                 'mname': notif.user.middle_name,
+                 'lname': notif.user.last_name,
+                 'username': notif.user.username,
+                 'email': notif.user.email,
+                 'course': notif.course,
+                 'date': notif.date_created.strftime('%B %d, %Y, %#I:%M %p'),
+                'subject': notif.notif_type.name,
+                'id': notif.user_id,
+                'role': notif.user.role.name,
+            }
+        )
+
+
+
     elif notif.notif_type.name == 'Role Request Approved':
         if notif.recipient.role.name == 'Student':
             request = "Role Request Student"
         elif notif.recipient.role.name == 'Adviser':
             request = "Role Request Adviser"
-        return JsonResponse({'success': True,
-                            'fname': notif.recipient.first_name,
-                            'mname': notif.recipient.middle_name, 
-                            'lname': notif.recipient.last_name,
-                            'username': notif.recipient.username,
-                            'email': notif.recipient.email,
-                            'date': notif.date_created.strftime('%B %d, %Y, %#I:%M %p'),
-                            'subject': notif.notif_type.name,
-                            'request': request,
-                            'subject-body':notif.notif_type.name+' by '+notif.user.first_name+notif.user.last_name,
-                            'approved-by': notif.user.first_name+' '+notif.user.last_name,
-                            'recipient': notif.user.first_name+' '+notif.user.last_name})
+        return JsonResponse(
+            {
+                'success': True,
+                'fname': notif.user.first_name,
+                'mname': notif.user.middle_name,
+                'lname': notif.user.last_name,
+                'username': notif.user.username,
+                'email': notif.user.email,
+                'course': notif.course,
+                'date': notif.date_created.strftime('%B %d, %Y, %#I:%M %p'),
+                'subject': notif.notif_type.name,
+                'id': notif.user_id,
+                'role': notif.user.role.name,
+            }
+        )
+
     elif notif.notif_type.name == 'New Record Proposal/Thesis' or notif.notif_type.name == 'New Record Project' or notif.notif_type.name == 'Resubmission':
-        return JsonResponse({'success': True,
-                            'date': notif.date_created.strftime('%B %d, %Y, %#I:%M %p'),
-                            'subject': notif.notif_type.name,
-                            'title': notif.record.title,
-                            'classification': notif.record.classification.name,
-                            'psced': notif.record.psced_classification.name,
-                            'recordID': notif.record.id,
-                            'authors': listOfAuthors(request, notif.record.id)})
+        return JsonResponse(
+            {
+                'success': True,
+                'date': notif.date_created.strftime('%B %d, %Y, %#I:%M %p'),
+                'subject': notif.notif_type.name,
+                'title': notif.record.title,
+                'classification': notif.record.classification.name,
+                'psced': notif.record.psced_classification.name,
+                'recordID': notif.record_id,
+                'authors': listOfAuthors(request, notif.record_id),
+            }
+        )
     elif notifications[0].notif_type.name == 'Request to Delete Record':
         return JsonResponse({ 'success': True })
     elif notifications[0].notif_type.name == 'Approved Request to Delete Record':
