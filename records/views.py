@@ -186,7 +186,7 @@ class Home(View):
                     records = records.filter(pk__in=Conference.objects.filter(title__contains=conference_filter).values('record_id'))
                 if publication_filter != '':
                     publications = Publication.objects.filter(name=publication_filter)
-                    if len(publications) > 0:
+                    if publications.exists():
                         records = records.filter(publication=publications.first())
                 if budget_min_filter != "" or budget_max_filter != "":
                     min = 0
@@ -220,7 +220,7 @@ class Home(View):
             # setting datatable records
             for record in records:
                 record_conference = Conference.objects.filter(record=record.id)
-                if record_conference:
+                if record_conference.exists():
                     for i in record_conference:
                         record_conference_title = i.title
                         record_conference_venue = i.venue
@@ -234,7 +234,7 @@ class Home(View):
                     record_conference_venue = ''
 
                 record_publication = Publication.objects.filter(record=record.id)
-                if record_publication:
+                if record_publication.exists():
                     for i in record_publication:
                         record_publication_name = i.name
                         record_publication_isbn = i.isbn
@@ -252,7 +252,7 @@ class Home(View):
                     record_publication_level = ''
 
                 record_budget = Budget.objects.filter(record=record.id)
-                if record_budget:
+                if record_budget.exists():
                     for i in record_budget:
                         record_budget_allocation = i.budget_allocation
                         record_funding_source = i.funding_source
@@ -266,7 +266,7 @@ class Home(View):
                     record_funding_source = ''
 
                 record_collaboration = Collaboration.objects.filter(record=record.id)
-                if record_collaboration:
+                if record_collaboration.exists():
                     for i in record_collaboration:
                         record_collaboration_institution = i.institution
                         record_collaboration_industry = i.industry

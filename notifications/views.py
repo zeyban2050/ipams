@@ -60,17 +60,25 @@ class StudentNotification(View):
                 notif = Notification.objects.get(pk=id)
                 if notif.notif_type.name == 'Record Approved' or notif.notif_type.name == 'Record Decline':
                     record_status = CheckedRecord.objects.filter(record=notif.record_id).latest('status')
-                    return JsonResponse({'success': True,
-                                        'date': notif.date_created.strftime('%B %d, %Y, %#I:%M %p'),
-                                        'subject': notif.notif_type.name,
-                                        'title': notif.record.title,
-                                        'classification': notif.record.classification.name,
-                                        'psced': notif.record.psced_classification.name,
-                                        'recordID': notif.record.id,
-                                        'status': record_status.status,
-                                        'subject-body':notif.notif_type.name+' by '+notif.user.first_name+notif.user.last_name,
-                                        'checked-by': notif.user.first_name+' '+notif.user.last_name,
-                                        'authors': listOfAuthors(request, notif.record.id)})
+                    return JsonResponse(
+                    {
+                       'success': True,
+                       'date': notif.date_created.strftime('%B %d, %Y, %#I:%M %p'),
+                       'subject': notif.notif_type.name,
+                       'title': notif.record.title,
+                       'classification': notif.record.classification.name,
+                       'psced': notif.record.psced_classification.name,
+                       'recordID': notif.record_id,
+                       'status': record_status.status,
+                        'subject-body': notif.notif_type.name
+                            + ' by '
+                            + notif.user.first_name
+                            + notif.user.last_name,
+                            'checked-by': notif.user.first_name + ' ' + notif.user.last_name,
+                            'authors': listOfAuthors(request, notif.record_id),
+                        }
+                    ) 
+                    
                 elif notif.notif_type.name == 'Role Request Approved':
                     return JsonResponse({'success': True,
                                         'fname': notif.recipient.first_name,
