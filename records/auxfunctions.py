@@ -1,15 +1,11 @@
-from asyncio import Task
-from multiprocessing import shared_memory
-from turtle import delay
 from notifications.models import Notification, NotificationType
 from accounts.models import UserRole, User, Student, Course
 from .models import Record
 from datetime import datetime as dt
-from django.contrib import messages
 from django.db.models import Subquery, Q
 from django.core.mail import send_mail, send_mass_mail, EmailMultiAlternatives
 from ipams import settings
-from celery import shared_task
+from threading import Thread
 
 # Connecting to Google Cloud Storage
 # from google.cloud import storage
@@ -66,6 +62,47 @@ from celery import shared_task
 
 #     print("Blob {} deleted.".format(blob_name))
 
+#multithreading
+class AddRecordEmailThread(Thread):
+	def __init__(self, add_record_email):
+		self.add_record_email = add_record_email
+		Thread.__init__(self)
+
+	def run(self):
+		self.add_record_email.send()
+
+class SendToKttoThread(Thread):
+	def __init__(self, send_to_ktto):
+		self.send_to_ktto = send_to_ktto
+		Thread.__init__(self)
+
+	def run(self):
+		self.send_to_ktto.send()
+
+class SendToRdcoThread(Thread):
+	def __init__(self, send_to_rdco):
+		self.send_to_rdco = send_to_rdco
+		Thread.__init__(self)
+
+	def run(self):
+		self.send_to_rdco.send()
+
+class EmailAcceptedRecordThread(Thread):
+	def __init__(self, email_after_accept):
+		self.email_after_accept = email_after_accept
+		Thread.__init__(self)
+
+	def run(self):
+		self.email_after_accept.send()
+
+class EmailDeclinedRecordThread(Thread):
+	def __init__(self, email_after_decline):
+		self.email_after_decline = email_after_decline
+		Thread.__init__(self)
+
+	def run(self):
+		self.email_after_decline.send()
+
 # new record
 def newRecordAdded(request, userID, adviserID, recordID):
 	user = User.objects.get(pk=userID)
@@ -110,13 +147,14 @@ def newRecordAdded(request, userID, adviserID, recordID):
 		f'\nTo view the record, login to the website {redirect_path}'
 	)
 	to_email = adviser.email
-	send_mail(
+	add_record_email = send_mail(
 	    mail_subject, 
 	    message, 
 	    settings.EMAIL_HOST_USER, 
 	    [to_email],
 	    fail_silently=False
 	)
+	AddRecordEmailThread(add_record_email).start()
 
 # resubmission of record -> whoever decline will receive the notification
 def resubmission(request, userID, recordID, checkedByID):
@@ -146,8 +184,8 @@ def resubmission(request, userID, recordID, checkedByID):
 	notification.save()
 
 	url = request.build_absolute_uri()
-	base_url = url.split("add")
-	redirect_path = base_url[0] + 'record/pending/' + str(record.pk)
+	base_url = url.split("account/signup")
+	redirect_path = base_url[0] + '/record/pending/' + str(record.pk)
 
 	mail_subject = NotificationType.objects.get(pk=5)
 	message = (
@@ -239,7 +277,8 @@ def recordStatus(request, userID, recordID, recipientID, status):
 			notification = Notification(user=user, role=user.role, record=record, 
 				notif_type=notif_type, to_ktto=True, is_read=False, date_created=dt.now())
 
-			ktto_accounts = User.objects.filter(role__in=Subquery(UserRole.objects.filter(pk=4).values('pk')))
+			#ktto_accounts = User.objects.filter(role__in=Subquery(UserRole.objects.filter(pk=4).values('pk')))
+			ktto_accounts = User.objects.filter(role=4).select_related('role')
 
 			mail_subject = notif_type
 			message = (
@@ -250,14 +289,16 @@ def recordStatus(request, userID, recordID, recipientID, status):
 			)
 			
 			messages_to_send = [(mail_subject, message, settings.EMAIL_HOST_USER, [account.email]) for account in ktto_accounts]
-			send_mass_mail(messages_to_send) 
+			send_to_ktto = send_mass_mail(messages_to_send) 
+			SendToKttoThread(send_to_ktto).start()
 			
 		if user.role.name == 'KTTO' or user.role.name == 'TBI':
 			# to_rdco is true because after ktto approved is rdco
 			notification = Notification(user=user, role=user.role, record=record, 
 				notif_type=notif_type, to_rdco=True, is_read=False, date_created=dt.now())
 
-			rdco_accounts = User.objects.filter(role__in=Subquery(UserRole.objects.filter(pk=5).values('pk')))
+			#rdco_accounts = User.objects.filter(role__in=Subquery(UserRole.objects.filter(pk=5).values('pk')))
+			rdco_accounts = User.objects.filter(role=5).select_related('role')
 
 			mail_subject = notif_type
 			message = (
@@ -268,7 +309,8 @@ def recordStatus(request, userID, recordID, recipientID, status):
 			)
 			
 			messages_to_send = [(mail_subject, message, settings.EMAIL_HOST_USER, [account.email]) for account in rdco_accounts]
-			send_mass_mail(messages_to_send) 
+			send_to_rdco = send_mass_mail(messages_to_send)
+			SendToRdcoThread(send_to_rdco).start() 
 
 		if user.role.name == 'RDCO':
 			notification = Notification(user=user, role=user.role, recipient=recipient, record=record, 
@@ -282,13 +324,13 @@ def recordStatus(request, userID, recordID, recipientID, status):
 				f'\nTo view the record, login to the website {redirect_path}'
 			)
 			to_email = recipient.email
-			send_mail(
+			email_after_accept = send_mail(
 			    mail_subject, 
 			    message, 
 			    settings.EMAIL_HOST_USER, 
 			    [to_email],
-			    fail_silently=False
 			)
+			EmailAcceptedRecordThread(email_after_accept).start()
 
 	elif status == 'declined':
 		notification = Notification(user=user, role=user.role, recipient=recipient, record=record, 
@@ -302,13 +344,13 @@ def recordStatus(request, userID, recordID, recipientID, status):
 			f'\nTo edit and resubmit the record, login to the website {redirect_path}'
 		)
 		to_email = recipient.email
-		send_mail(
+		email_after_decline = send_mail(
 		    mail_subject, 
 		    message, 
 		    settings.EMAIL_HOST_USER, 
 		    [to_email],
-		    fail_silently=False
 		)
+		EmailDeclinedRecordThread(email_after_decline).start()
 
 	notification.save()
 
