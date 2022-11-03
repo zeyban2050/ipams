@@ -25,7 +25,7 @@ class EmailThreading(Thread):
 		Thread.__init__(self)
 
 	def run(self):
-		self.email_message.send()
+		self.email_message
 
 class EmailThreadingStudent(Thread):
 	def __init__(self, email_message_student):
@@ -33,7 +33,7 @@ class EmailThreadingStudent(Thread):
 		Thread.__init__(self)
 
 	def run(self):
-		self.email_message_student.send()	
+		self.email_message_student	
 
 class EmailThreadingAdviser(Thread):
 	def __init__(self, email_message_adviser):
@@ -41,7 +41,7 @@ class EmailThreadingAdviser(Thread):
 		Thread.__init__(self)
 
 	def run(self):
-		self.email_message_adviser.send()
+		self.email_message_adviser
 
 def roleRequestStudent(request, userID):
 	user = User.objects.get(pk=userID)
@@ -91,7 +91,9 @@ def roleRequestStudent(request, userID):
 
 def roleRequestAdviser(request, userID):
 	user = User.objects.get(pk=userID)
-	kart_accounts = User.objects.filter(role__gte=4).select_related('role')
+
+	#kart_accounts = User.objects.filter(role__gte=4).select_related('role')
+	kart_accounts = User.objects.filter(role__in=['4','5']).select_related('role')
 	messages.success(request, "Role Request to be an adviser sent")
 
 	url = request.build_absolute_uri()

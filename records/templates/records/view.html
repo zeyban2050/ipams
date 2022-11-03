@@ -218,6 +218,7 @@
 
                     // POSTING COMMENT
                     $("#btn-uploads-post").on("click", function(){
+                        $("#btn-uploads-post").attr("disabled", true);
                         $.ajax({
                             headers: { "X-CSRFToken": '{{ csrf_token }}' },
                             dataType:"json",

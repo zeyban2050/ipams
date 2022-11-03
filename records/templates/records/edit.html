@@ -136,6 +136,7 @@
 		});
 
 		$("#btn-record-submit").on("click",function(){
+			$("#btn-record-submit").attr("disabled", true);
 			$('#loadIndicator').html('<div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>');
     		$.ajax({
 				headers: { "X-CSRFToken": '{{ csrf_token }}' },

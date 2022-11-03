@@ -298,6 +298,7 @@
 					serializedAccounts+="&accounts[]="+accounts[i];
 				}
 				$("#btn-role-apply").on("click", function(){
+					$("#btn-role-apply").attr("disabled", true);
 					$.ajax({
             			headers: { "X-CSRFToken": '{{ csrf_token }}' },
             			url: "{% url 'records-index' %}",
@@ -310,7 +311,9 @@
 				    		  'Roles Changed!',
 				    		  'The selected accounts roles have been changed',
 				    		  'success'
-				    		)
+				    		).then((result) => {
+								location.reload()
+							});
 						},
 						error: function(data){
 							alert("error");

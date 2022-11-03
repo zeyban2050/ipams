@@ -7,9 +7,6 @@
     width: 100%
 }
 
-.progressBar {
-}
-
 .progressBar li {
     list-style-type: none;
     float: left;
@@ -138,6 +135,7 @@
 
 	$("#btn-record-submit").on("click",function(){
 		// adviser input field must not be empty before submitting a record
+		$("#btn-record-submit").attr("disabled", true);
 		var reqlength = $('.adviser_uploads').length;
 	    console.log(reqlength);
 	    var value = $('.adviser_uploads').filter(function () {
