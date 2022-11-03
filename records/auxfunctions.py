@@ -215,8 +215,8 @@ def roleRequestNotify(userID, recipientID):
 	notification.save()
 
 def roleRequestApproved(request, userID, recipientID):
-	user = User.objects.get(pk=userID)
-	recipient = User.objects.get(pk=recipientID)
+	user = User.objects.get(pk=recipientID)
+	recipient = User.objects.get(pk=userID)
 
 	url = request.build_absolute_uri()
 	base_url = url.split("account/signup")
@@ -228,7 +228,7 @@ def roleRequestApproved(request, userID, recipientID):
 		from_email = settings.EMAIL_HOST_USER,
 		to = ([recipient.email]),
 			body = (
-				f"{user.first_name} {user.last_name} approved {recipient.first_name} {recipient.last_name}'s request to be a {recipient.role}." \
+				f"{recipient.first_name} {recipient.last_name} approved {user.first_name} {user.last_name}'s request to be a {user.role}." \
 				f' \nLogin to the website {redirect_path} for more information.'
 			)
 	)

@@ -64,6 +64,7 @@
 					serializedAccounts+="&accounts[]="+accounts[i];
 				}
 				$("#btn-role-apply").on("click", function(){
+					$("#btn-role-apply").attr("disabled", true);
 					$.ajax({
             			headers: { "X-CSRFToken": '{{ csrf_token }}' },
             			url: "{% url 'records-index' %}",
@@ -71,13 +72,15 @@
 						data: $("#form-change-role").serialize()+serializedAccounts,
 						success: function(data){
 							$("#accounts-role-modal").modal("hide");
+							$("#btn-role-apply").attr("disabled", false);
 							accountsTbl.ajax.reload();
 							Swal.fire(
 				    		  'Roles Changed!',
 				    		  'The selected accounts roles have been changed',
 				    		  'success'
-				    		)
-							//location.reload(true)
+				    		).then((result) => {
+								location.reload()
+							});
 						},
 						error: function(data){
 							alert("error");
