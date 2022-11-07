@@ -27,6 +27,8 @@
 
 # **Design and Architecture**
 MVT Architecture
+
+
 ![MVT Architecture drawio](https://user-images.githubusercontent.com/53965169/200243046-0a598498-8e70-4c4e-b598-3065ad011598.png)
 
 
