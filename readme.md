@@ -32,8 +32,9 @@ MVT Architecture
    -   In the server side, the model will send data to the views (auxfunctions, and decorators may apply if functions within the views refers to auxfunctions and decorators) where the views will apply functionalities to be displayed towards the template or client.
    
 
--FOR WINDOWS 
+
 ## Database
+**-FOR WINDOWS** 
 Install [XAMPP](https://www.apachefriends.org/download.html) for the database.
 After installing XAMPP, do the following tasks:
 * Before Starting MySQL, click the "Config" button and choose "my.ini".
