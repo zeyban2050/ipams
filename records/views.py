@@ -32,7 +32,6 @@ from axes.models import AccessAttempt, AccessBase
 from axes.utils import reset
 
 from django.conf import settings
-import celery
 
 FILE_LENGTH = 5242880
 
