@@ -70,7 +70,7 @@ class RecordType(models.Model):
 class Record(models.Model):
     title = models.CharField(max_length=100)
     year_accomplished = models.CharField(max_length=30) #Year Started
-    year_completed = models.CharField(max_length=30, default='', blank=True)
+    year_completed = models.CharField(max_length=30, default='', null=True, blank=True)
     abstract = RichTextField()
     classification = models.ForeignKey(Classification, on_delete=models.DO_NOTHING)
     psced_classification = models.ForeignKey(PSCEDClassification, on_delete=models.DO_NOTHING)
@@ -78,7 +78,7 @@ class Record(models.Model):
     # abstract_filename and abstract_filesize is supposed to be use when there will be a cloud storage
     # to be used in saving the files to prevent uploading the
     # file itself to the default django storage
-    abstract_filename = models.CharField(max_length=150, default='', blank=True)
+    abstract_filename = models.CharField(max_length=150, default='', null=True, blank=True)
     abstract_filesize = models.IntegerField(default=0, null=True, blank=True)
 
     abstract_file = models.FileField(upload_to='abstract/', default='', null=True, blank=True)  # WHOLE RESEARCH PAPER
@@ -89,7 +89,7 @@ class Record(models.Model):
     adviser = models.ForeignKey('accounts.User', on_delete=models.DO_NOTHING, null=True, blank=True)
     record_type = models.ForeignKey(RecordType, on_delete=models.DO_NOTHING, null=True, blank=True, default=3)
     representative = models.CharField(max_length=100)
-    code = models.CharField(max_length=100, default='', blank=True)
+    code = models.CharField(max_length=100, default='', null=True, blank=True)
     is_marked = models.BooleanField(default=False) # marked for deletion
     reason = models.TextField() # reason for deleting the record
 
@@ -114,11 +114,11 @@ class CheckedRecord(models.Model):
         return self.record.title
 
 class Publication(models.Model):
-    name = models.CharField(max_length=200, default='', blank=True)
-    isbn = models.CharField(max_length=50, default='', blank=True)
-    issn = models.CharField(max_length=50, default='', blank=True)
-    isi = models.CharField(max_length=50, default='', blank=True)
-    year_published = models.CharField(max_length=50, default='', blank=True)
+    name = models.CharField(max_length=200, default='', null=True, blank=True)
+    isbn = models.CharField(max_length=50, default='', null=True, blank=True)
+    issn = models.CharField(max_length=50, default='', null=True, blank=True)
+    isi = models.CharField(max_length=50, default='', null=True, blank=True)
+    year_published = models.CharField(max_length=50, default='', null=True, blank=True)
     publication_level = models.ForeignKey(PublicationLevel, on_delete=models.DO_NOTHING, null=True, blank=True)
     record = models.OneToOneField(Record, on_delete=models.CASCADE, primary_key=True, default=None)
     date_created = models.DateTimeField(auto_now_add=True)
