@@ -164,11 +164,11 @@
             });
 
             // prevent users from copy pasting abstract
-            $('#abstract_content').bind("cut copy paste",function(e) {
+            $('#abstract_content').bind('copy paste contextmenu',function(e) {
                 e.preventDefault();
+                return false;
             });
         });
-
 
         function checkStatusClick(role){
             if(role == 'adviser'){
@@ -282,7 +282,7 @@
                 ).then((result) => {
                     window.location.reload();
                 });
-              }else{}
+              }
             })
         });
 	</script>

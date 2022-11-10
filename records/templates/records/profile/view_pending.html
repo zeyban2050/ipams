@@ -236,6 +236,53 @@
             });
         }
 
+        $(".download").on("click", function(){
+            Swal.fire({
+              title: 'Send Request to Download Abstract',
+              text: "To download {{ record.title }} please click Send Request button to ask for permission. Once approved you will be notified through your email account.",
+              type: 'info',
+              showCancelButton: true,
+              confirmButtonColor: '#3085d6',
+              cancelButtonColor: '#d33',
+              confirmButtonText: 'Send Request'
+            }).then((result) => {
+              if (result.value) {
+                $.ajax({
+                    "headers": { "X-CSRFToken": '{{ csrf_token }}' },
+                    "type": "post",
+                    "data": {
+                        sendRequest: true,
+                        recordId: '{{ record.pk }}',
+                        userId: '{{ user.pk }}'
+                    },
+                    "success": function(data){
+                    },
+                    "error": function(data){
+                        alert("error");
+                    }
+                });
+                Swal.fire(
+                    "Request Sent!",
+                    "Upon approval a link will be sent and by clicking the link the record would download automatically.",
+                    'success'
+                ).then((result) => {
+                    window.location.reload();
+                });
+              }
+            })
+        });
+
+        $(function(){
+            $("#id_comment").prop('required',true);
+            if($("#id_comment") == '') {
+                $("#btn-assessment-save").show();
+            }
+        });
+
+        $("#btn-assessment-save").on("click",function(){
+                $('#loadIndicator').html('<div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>');
+                $("#btn-assessment-save").hide();                
+        });
 
         $("#btn-uploads-back").on("click", function(){
             $("#uploads").show();

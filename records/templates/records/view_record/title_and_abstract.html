@@ -29,13 +29,15 @@
                     <span id="abstract_content">{{ record.abstract|safe }}</span>
                 </div>
             </div>
-            {% if record.abstract_filename and user.role.id > 1 %}
+            {% if user.role.id > 1 %}
             <div class="row">
                 <div class="col-12">
                     {% if record.record_type.name == 'Proposal' %}
                     <a href="#" class="download">Download Proposal</a>
                     {% elif record.record_type.name == 'Thesis/Research' %}
                     <a href="#" class="download">Download Research Paper</a>
+                    {% else %}
+                    <a href="#" class="download">Download Project</a>
                     {% endif %}
                     <label> size: {{ record.abstract_filesize|filesizeformat }}</label>
                 </div>
