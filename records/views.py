@@ -155,9 +155,9 @@ class Home(View):
                 if (year_from_filter != '' and year_to_filter != ''):
                     records = records.filter(year_accomplished__gte=year_from_filter).filter(year_completed__lte=year_to_filter)
                 elif year_from_filter != '':
-                    records = records.filter(year_accomplished__gte=year_from_filter)
+                    records = records.filter(year_accomplished=year_from_filter)
                 elif year_to_filter != '':
-                    records = records.filter(year_completed__lte=year_to_filter)
+                    records = records.filter(year_completed=year_to_filter)
                 
                 if ip_filter != '' and commercialization_filter == '' and community_filter == '':
                     records = records.filter(is_ip=True)

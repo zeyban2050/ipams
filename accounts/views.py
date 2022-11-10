@@ -260,13 +260,15 @@ def change_password(request):
     if request.method == 'POST':
         password_old = request.POST.get('password-old', None)
         password_new = request.POST.get('password-new', None)
-        if (password_old is not None or password_old != '') and (password_new is not None or password_new != ''):
+        if ((password_old is not None or password_old != '') and (password_new is not None or password_new != '')) and len(password_new) >= 8:
             if check_password(password_old, request.user.password):
                 request.user.set_password(password_new)
                 request.user.save()
                 messages.success(request, "Password changed!")
             else:
                 messages.error(request, 'Incorrect old password')
+        else:
+            messages.error(request, 'New password must be 8 characters longer')
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 

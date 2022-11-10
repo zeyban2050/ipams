@@ -471,7 +471,7 @@ def sendDownloadRequest(request, userID, recordID):
 
 	kr_accounts = User.objects.filter(Q(role__in=Subquery(UserRole.objects.filter(pk=5).values('pk'))) | Q(role__in=Subquery(UserRole.objects.filter(pk=4).values('pk'))))
 
-	mail_subject = NotificationType.objects.get(pk=10)
+	mail_subject = NotificationType.objects.get(pk=12)
 	message = (
 		f'{user.first_name} {user.last_name} has sent a request to download record {record.title}' \
 		f' with a classification of {record.classification} and a PSCED classification of' \
