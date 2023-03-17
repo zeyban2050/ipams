@@ -214,3 +214,8 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 CSRF_TRUSTED_ORIGINS = ['https://*.ap.ngrok.io/']
 
 INTERNAL_IPS = ['127.0.0.1', ]
+
+MIGRATION_MODULES = {'accounts': 'accounts.disable_migrations',
+                    'records': 'records.disable_migrations',
+                    'notifications': 'notifications.disable_migrations',
+                    }
