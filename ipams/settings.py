@@ -23,20 +23,23 @@ AUTH_USER_MODEL = 'accounts.User'
 # Application definition
 
 INSTALLED_APPS = [
+    #crispy_forms,   
     'accounts',
-    'records',
-    'notifications',
-    'crispy_forms',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'ckeditor',
-    'django_extensions',
-    'axes',
-    # 'channels',
+    #'crispy_forms',   
+     'records',
+     'notifications',
+     'crispy_forms',
+     'crispy_bootstrap4',
+     'django.contrib.admin',
+     'django.contrib.auth',
+     'django.contrib.contenttypes',
+     'django.contrib.sessions',
+     'django.contrib.messages',
+     'django.contrib.staticfiles',
+     'ckeditor',
+     'django_extensions',
+     'axes',
+    # # 'channels',   
     "sslserver",
     # "debug_toolbar",
 ]
@@ -195,7 +198,7 @@ EMAIL_PORT = 587
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-EMAIL_HOST_USER = 'ipamsdevteam22@gmail.com' 
+EMAIL_HOST_USER = 'ipamsdevteam22@gmail.com'
 EMAIL_HOST_PASSWORD = 'fxmdxdbactlknwia'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
@@ -210,6 +213,10 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 #     },
 # }
 
+MIGRATION_MODULES = {'accounts': 'accounts.disable_migrations',
+                        'records': 'records.disable_migrations',
+                        'notifications': 'notifications.disable_migrations',
+                        }
 
 CSRF_TRUSTED_ORIGINS = ['https://*.ap.ngrok.io/']
 
